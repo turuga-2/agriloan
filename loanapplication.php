@@ -1,8 +1,11 @@
-<?php include "config/databaseconfig.php";
+<?php 
+include "config/databaseconfig.php";
+//require "setorders.php";
+
 session_start();
 $idNumber = $_SESSION['idNumber'];
 // Retrieve the cart total from the session
-$cartTotal = isset($_SESSION['cartTotal']) ? $_SESSION['cartTotal'] : 0;
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -100,28 +103,7 @@ $cartTotal = isset($_SESSION['cartTotal']) ? $_SESSION['cartTotal'] : 0;
       box-sizing: border-box;
 
     }
-    .financialdetails{
-      width: 600px;
-      height: 500px;
-      margin: auto;
-      background-color: #6d947cd2;
-      border-radius: 5px;
-      position: relative;
-      top: 10px; 
-      bottom: 60px;
-      
-    }
-    .financialdetails .btn{
-          width: 50%;
-          align-items: center;
-          margin-left: 20%;
-          padding: 10px;
-          background-color: #333;
-          color: #fff;
-          border: none;
-          border-radius: 5px;
-          cursor: pointer;
-    } 
+    
     .farmdetails {
       display: block;
       justify-content: center;
@@ -155,7 +137,20 @@ $cartTotal = isset($_SESSION['cartTotal']) ? $_SESSION['cartTotal'] : 0;
             margin-left: 20px;
             margin-right: 25px;
         }
+        button {
+            width: max-content;
+            align-items: center;
+            margin-left: 20px;
+            padding: 10px;
+            background-color: #e44d26 ;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
 
+            
+            
+        }
         .maizebundle button,
         .beansbundle button {
             width: 80px;
@@ -211,27 +206,9 @@ $cartTotal = isset($_SESSION['cartTotal']) ? $_SESSION['cartTotal'] : 0;
     }
     
   </style>
-  <style>
-    .progress-bar {
-      display: flex;
-      justify-content: space-between;
-      padding: 15px;
-      background-color: #333;
-      color: #fff;
-      font-weight: bold;
-    }
-    .progress-step {
-      flex: 1;
-      text-align: center;
-    }
-    .progress-step.active {
-      color: #f39c12; /* Active step color */
-    }
-    .form-container {
-      display: none;
-    }
-  </style>
+  
  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+ <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 </head>
 <body>
 
@@ -251,46 +228,11 @@ $cartTotal = isset($_SESSION['cartTotal']) ? $_SESSION['cartTotal'] : 0;
         <a href="loanrepayment.php">Loan Repayment</a>
         <a href="logout.php">Logout </a>
   </div>
+<h2><i>Welcome to your loan application</i></h2>
+  <button onclick="startApplication()">Start Application Process</button>
 
-  <div class="progress-bar">
-    <div class="progress-step financialDetails">Financial Details</div>
-    <div class="progress-step farmDetails">Farm Details</div>
-  </div>
-
-    <!-- Step 1: Personal Details -->
-  
-   <!-- Step 2: Financial Details -->
-  <div id="financialDetails" class="form-container" style="display: block;">
-    <div id="step2" class="financialdetails">
-      <!-- ... -->
-      <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"])?>" method="post" enctype="multipart/form-data">
-    <h2>Financial details</h2>
-        <p>insert a copy of your CRB clearance certificate below</p>
-        <label for="crbcert">Choose a PDF file:</label>
-        <input type="file" id="crbcert" name="crbcert" accept=".pdf">
-        <br>
-
-        <p><br>insert a copy of your current bank statement below</p>
-        <label for="bankstmt">Choose a PDF file:</label>
-        <input type="file" id="bankstmt" name="bankstmt" accept=".pdf">
-        <br>
-
-        <p><br>insert a copy of your title deed below</p>
-        <label for="deed">Choose a PDF file:</label>
-        <input type="file" id="deed" name="deed" accept=".pdf">
-        <br>
-
-      
-        <input type="submit" value="Upload" class="btn">
-      </form>
-        
-        <button onclick="nextStep('farmDetails')">Next</button>
-      
-    </div>
-  </div>
-
-      <div id="farmDetails" class="form-container">
-      <div id="step3" class="farmdetails">
+      <div id="farmDetails" class="form-container" style="display: none;">
+      <div class="farmdetails">
       <h2>Loan details</h2>
         
             <h4>Please enter your acreage </h4>
@@ -319,7 +261,6 @@ $cartTotal = isset($_SESSION['cartTotal']) ? $_SESSION['cartTotal'] : 0;
                 <img src="fertiliser\DAPplanting.png" alt="DAP">
                 DAP 25 kg -ksh2975
                 </li>
-                Total price = 
               </ol>
               <button class="select-btn" onclick="selectBundle('maizebundle')">Select</button>
             </div>
@@ -341,7 +282,6 @@ $cartTotal = isset($_SESSION['cartTotal']) ? $_SESSION['cartTotal'] : 0;
               </li> 
             
               </ol>
-              Total price = ksh 5824
               <button class="select-btn" onclick="selectBundle('beansbundle')">Select</button>
               
             </div>
@@ -357,53 +297,19 @@ $cartTotal = isset($_SESSION['cartTotal']) ? $_SESSION['cartTotal'] : 0;
 
        </div>
 
-       <button onclick="prevStep('financialDetails')">Previous</button>
-       <button type="submit">Submit</button>    
+      
+       <button type="submit" onclick="loantotal()">Submit Application</button>    
             
     </div>
       
     </div>
     
+    
     <script>
-  function nextStep(nextStepId) {
-    var currentStep = document.querySelector('.form-container[style="display: block;"]');
-    var nextStep = document.getElementById(nextStepId);
-
-    if (currentStep && nextStep) {
-      currentStep.style.display = 'none';
-      nextStep.style.display = 'block';
-
-      updateProgressBar(nextStepId);
+         function startApplication() {
+      // Show the farmDetails div
+      document.getElementById('farmDetails').style.display = 'block';
     }
-  }
-
-  function prevStep(prevStepId) {
-    var currentStep = document.querySelector('.form-container[style="display: block;"]');
-    var prevStep = document.getElementById(prevStepId);
-
-    if (currentStep && prevStep) {
-      currentStep.style.display = 'none';
-      prevStep.style.display = 'block';
-
-      updateProgressBar(prevStepId);
-    }
-  }
-
-  function updateProgressBar(activeStepId) {
-    var steps = document.querySelectorAll('.progress-step');
-    steps.forEach(function (step) {
-      step.classList.remove('active');
-    });
-
-    var activeStep = document.querySelector('.' + activeStepId);
-    if (activeStep) {
-      activeStep.classList.add('active');
-    }
-  }
-</script>
-    <script>
-
-    // Get the input element reference
     var acresInput = document.getElementById('acres');
     // Variable to store the entered value
     let enteredValue = 0;
@@ -413,56 +319,41 @@ $cartTotal = isset($_SESSION['cartTotal']) ? $_SESSION['cartTotal'] : 0;
         enteredValue = parseFloat(acresInput.value) || 0; // Convert to a float or default to 0 if not a valid number
         console.log('Entered Value:', enteredValue);
     });
+    
 
-    var totalPrice = 0;
+    var bundlePrice = 0;
      // Echo the PHP variable into a JavaScript variable
-     var cartTotal = <?php echo $cartTotal; ?>;
+     
 
      // Use the value of acres as the multiplier
      const multiplier = parseFloat(acresInput.value) || 1; // Default to 1 if the input is not a valid number
 
 
-    function updateTotalPrice() {
+    function updateBundlePrice() {
 
       // Get the input element reference
       const acresInput = document.getElementById('acres');
 
-        // Reset total price
-        totalPrice = 0;
+        // Reset bundle price
+        bundlePrice = 0;
 
         // Check if the maize bundle is selected
         const maizeBundle = document.querySelector('.maizebundle');
         if (maizeBundle.classList.contains('selected')) {
-            totalPrice += calculateBundleTotal('.maizebundleproducts');
+            bundlePrice += calculateBundleTotal('.maizebundleproducts');
         }
 
         // Check if the beans bundle is selected
         const beansBundle = document.querySelector('.beansbundle');
         if (beansBundle.classList.contains('selected')) {
-            totalPrice += calculateBundleTotal('.beansbundleproducts');
+            bundlePrice += calculateBundleTotal('.beansbundleproducts');
         }
 
-        console.log('Bundle Price:', totalPrice);
+        console.log('Bundle Price:', bundlePrice);
 
           // Make an AJAX request to set_totals.php to store the total price in the session
-    $.ajax({
-        type: 'POST',
-        url: 'set_totals.php',
-        data: { totalPrice: totalPrice },
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                console.log('Total price stored successfully');
-            } else {
-                console.error('Error storing total price:', response.message);
-            }
-        },
-        error: function() {
-            console.error('AJAX request to set_totals.php failed');
-        }
-    });
 
-    return totalPrice;
+    return bundlePrice;
 }
     function calculateBundleTotal(productClass) {
         // Calculate the total price for the selected bundle
@@ -484,20 +375,22 @@ $cartTotal = isset($_SESSION['cartTotal']) ? $_SESSION['cartTotal'] : 0;
         
     }
     function selectBundle(bundle) {
-        event.preventDefault();
-        const selectedBundle = document.querySelector(`.${bundle}`);
-        const otherBundle = bundle === 'maizebundle' ? document.querySelector('.beansbundle') : document.querySelector('.maizebundle');
+    event.preventDefault();
+    const selectedBundle = document.querySelector(`.${bundle}`);
+    const otherBundle = bundle === 'maizebundle' ? document.querySelector('.beansbundle') : document.querySelector('.maizebundle');
 
-        if (!selectedBundle.classList.contains('selected')) {
-            // If the selected bundle is not already selected, deselect the other bundle
-            otherBundle.classList.remove('selected');
-        }
+    if (!selectedBundle.classList.contains('selected')) {
+        // If the selected bundle is not already selected, deselect the other bundle
+        otherBundle.classList.remove('selected');
+    }
 
-        // Toggle the selected state for the clicked bundle
-        selectedBundle.classList.toggle('selected');
+    // Toggle the selected state for the clicked bundle
+    selectedBundle.classList.toggle('selected');
 
-        // Update the total price based on the selected bundle
-        updateTotalPrice();
+    // Update the total price based on the selected bundle
+    const bundlePrice = updateBundlePrice();
+
+    
     }
 
     function loadCart(pageUrl) {
@@ -515,13 +408,98 @@ $cartTotal = isset($_SESSION['cartTotal']) ? $_SESSION['cartTotal'] : 0;
         });
     }
 
-    function checkout() {
+    function loantotal() {
+      var bundlePrice = updateBundlePrice(); 
+      bundlePrice = parseFloat(bundlePrice.toFixed(2));
+
+      var cartTotal = <?php echo isset($_SESSION['cartTotal']) ? $_SESSION['cartTotal'] : 0; ?>;
+      console.log('sessioncartTotal : ' + cartTotal); 
+   
+    
+    // Calculate loan total
+    var loantotal = bundlePrice + parseFloat(cartTotal);
+
+    // Calculate interest (6.5% of the loan total)
+    const interestRate = 0.065;
+    const interest = loantotal * interestRate;
+
+    // Calculate grand total and round to two decimal places
+    var grandtotal = (loantotal + interest).toFixed(2);
+
+    // Log the results to the console and display with two decimal places
+    console.log('loantotal: ' + loantotal.toFixed(2));
+    console.log('interest: ' + interest.toFixed(2)); 
+    console.log('grandtotal: ' + grandtotal);
+    
+    $.ajax({
+        url: 'processloan.php',
+        method: 'POST',
+        data: {
+          enteredValue: enteredValue,
+          bundlePrice: bundlePrice,
+          loantotal: loantotal,
+          interest: interest,
+          grandtotal: grandtotal
+        },
+        success: function(response) {
+            console.log(response);
+            console.log('loan processed  successfully.');
+        },
+        error: function() {
+            console.error('Error processing loan.');
         
-        alert('Loan application has been submitted successfully');
-        console.log('Bundle Price:', cartTotal);
+        }
+    });
+    // Show SweetAlert popup for successful loan application
+    Swal.fire({
+        title: 'Loan application submitted successfully!',
+        html: `<p>Your loan status is Pending</p>
+          <p>Your Loan Amount is: ksh ${loantotal.toFixed(2)}</p>
+          <p>The Interest payable is : ksh ${interest.toFixed(2)}</p>
+          <p>Total Loan Amount: ksh ${grandtotal}</p>
+        `,
+        icon: 'success',
+        customClass: {
+          popup: 'custom-popup-class',
+          icon: 'custom-icon-class'
+        },
+        width: '400px', // Adjust the width as needed
+      });
+
+      // Hide the farmDetails div after successful loan application
+      document.getElementById('farmDetails').style.display = 'none';
     }
+
+    
+        
+        
+        //   Swal.fire({
+        //     title: 'Loan application submitted successfully!',
+        //     html: `<p>Your loan status is Pending</p>
+        //     <p>Total Loan Amount : ksh ${loantotal.toFixed(2)}</p>
+        //            <p>Successfully Added Items:</p>
+        //            <ol style="text-align: left;">${cartItems.map(item => `<li>${item}</li>`).join('')}</ol>
+        //            `,
+        //     icon: 'success',
+        //     customClass: {
+        //         popup: 'custom-popup-class', 
+        //         icon: 'custom-icon-class'
+        //     },
+        //     width: '400px', // Adjust the width as needed
+        // });
+
+
+       
+
+
+       // return loantotal;
+
+
 </script>
        
 
 </body>
 </html>
+
+    
+    

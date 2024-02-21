@@ -31,7 +31,7 @@ def predict_loan_approval():
 
     # Make a prediction
     prediction = model.predict(input_features)
-
+    print(jsonify({'prediction': prediction[0]}))
     # Return the prediction as JSON
     return jsonify({'prediction': prediction[0]})
 

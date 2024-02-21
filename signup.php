@@ -92,15 +92,6 @@ input[type="submit"]{
         
         <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"])?>"
         method="post"  autocomplete="on" id="accountForm">
-
-        <?php
-            if(isset($error)){
-                foreach($error as $error){
-                    echo '<span class="error-msg">'.$error.'</span>';
-                }
-            }
-        ?>
-
             
             <label for="idNumber">IDNumber</label>
             <input type="text" id="idNumber" name="idNumber" placeholder="IDNumber" oninput="restrictInputToNumbers(this);">
@@ -151,12 +142,13 @@ input[type="submit"]{
                     <option value="self-employed">Self-employed</option>
                     <option value="employed">Employed</option>
                 </select>
+         
+                <label>Monthly Income: </label>
+                <input type="number" id="income" name="income"  min="0" placeholder="0" required>
 
-
-
-        
-        <label>Monthly Income: </label>
-        <input type="number" id="income" name="income"  min="0" placeholder="0" required>
+                <p>insert a copy of your CRB clearance certificate below</p>
+                <label for="crbcertpath">Choose a PDF file:</label>
+                <input type="file" id="crbcertpath" name="crbcertpath" accept=".pdf">
 
 
             <label for="password">Password</label>
@@ -167,7 +159,7 @@ input[type="submit"]{
                         required >
             
             
-
+ 
             
             <input type="submit"  value="submit" name="submit" class="btn">
         </form>
@@ -200,6 +192,7 @@ input[type="submit"]{
             global $conn;
             return mysqli_real_escape_string($conn, htmlspecialchars(trim($data)));
         }
+        try{
 
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Sanitize input data
@@ -216,44 +209,92 @@ input[type="submit"]{
     $employment = isset($_POST['employment']) ? sanitizeInput($_POST['employment']) : null;
     $income = sanitizeInput($_POST['income']);
     $password = sanitizeInput($_POST['password']);
-        }
 
-    //Insert data into the database
-    $sql = "INSERT INTO `farmers` (`idNumber`, `fname`, `lname`, `phoneNumber`, `email`, `county`, `gender`, `maritalstatus`, `dependents`, `educationlevel`, `employment`, `income`, `password`) 
-    VALUES ('$idNumber', '$fname', '$lname', '$phoneNumber', '$email', '$county', '$gender', '$maritalstatus', '$dependents', '$educationlevel', '$employment', '$income', '$password')";
+    // Check if the passwords match
+    // if ($password !== $confirmPassword) {
+    //     throw new Exception("Passwords do not match.");
+    // }
+    // Hash the password
+    $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-    if ($conn->query($sql) === TRUE) {
-        echo "Data saved successfully.";
-        header("Location: farmerlogin.php");
         
-    } else {
-        echo "Error: " . $sql . "<br>" . $conn->error;
-    }?>
+       // File upload handling
+       $uploadDir = "uploads/";
+       $crbCertPath = $uploadDir . basename($_FILES["crbcertpath"]["name"]);
+
+       // Upload the file
+       if (move_uploaded_file($_FILES["crbcertpath"]["tmp_name"], $crbCertPath)) {
+           echo "File uploaded successfully.";
+       } else {
+           throw new Exception("Error uploading file.");
+       }
+
+       // Insert data into the database
+       $sql = "INSERT INTO `farmers` (`idNumber`, `fname`, `lname`, `phoneNumber`, `email`, `county`, `gender`, `maritalstatus`, `dependents`, `educationlevel`, `employment`, `income`, `crbcertpath`, `password`) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+       $stmt = $conn->prepare($sql);
+       $stmt->bind_param(
+           'ssssssssssssss',
+           $idNumber,
+           $fname,
+           $lname,
+           $phoneNumber,
+           $email,
+           $county,
+           $gender,
+           $maritalstatus,
+           $dependents,
+           $educationlevel,
+           $employment,
+           $income,
+           $crbCertPath,
+           $hashedPassword
+       );
+
+       if ($stmt->execute()) {
+           // Success
+           echo "Data saved successfully.";
+           header("Location: farmerlogin.php");
+           exit();
+       } else {
+           throw new Exception("Error inserting data into the database.");
+       }
+   }
+} catch (Exception $e) {
+   // Handle exceptions here
+   echo "Error: " . $e->getMessage();
+}
+
+$conn->close();
+    
+    ?>
+
     <script>
-         document.getElementById('accountForm').addEventListener('submit', function (event) {
-            event.preventDefault();
+//          document.getElementById('accountForm').addEventListener('submit', function (event) {
+//             event.preventDefault();
 
            
-            // Assuming the form submission was successful, show the success popup
-            // Check if Swal is defined
-    if (typeof Swal !== 'undefined') {
-        // Assuming the form submission was successful, show the success popup
-        Swal.fire({
-            icon: 'success',
-            title: 'Account Created Successfully!',
-            showConfirmButton: false,
-            timer: 2000, // Automatically close after 2 seconds
+//             // Assuming the form submission was successful, show the success popup
+//             // Check if Swal is defined
+//     if (typeof Swal !== 'undefined') {
+//         // Assuming the form submission was successful, show the success popup
+//         Swal.fire({
+//             icon: 'success',
+//             title: 'Account Created Successfully!',
+//             showConfirmButton: false,
+//             timer: 2000, // Automatically close after 2 seconds
             
-        }).then((result) => {
-            // Redirect to the login page after the modal is closed
-            if (result.dismiss === Swal.DismissReason.timer) {
-                window.location.href = 'farmerlogin.php';
-            }});
-     }else {
-        // Log an error if Swal is not defined
-        console.error('SweetAlert (Swal) is not defined. Make sure the script is properly included.');
-    }
-});
+//         }).then((result) => {
+//             // Redirect to the login page after the modal is closed
+//             if (result.dismiss === Swal.DismissReason.timer) {
+//                 window.location.href = 'farmerlogin.php';
+//             }});
+//      }else {
+//         // Log an error if Swal is not defined
+//         console.error('SweetAlert (Swal) is not defined. Make sure the script is properly included.');
+//     }
+// });
         
         
     </script>

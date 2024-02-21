@@ -1,6 +1,7 @@
 <?php include "config/databaseconfig.php";
 session_start();
-$totalPrice = $_SESSION['totalPrice'] ;
+
+
 
 // Fetch products from the database for each category
 $seedsQuery = "SELECT * FROM `products` WHERE category = 'seeds'";
@@ -25,6 +26,7 @@ function fetchProducts($result)
 $seeds = fetchProducts($seedsResult);
 $fertilizers = fetchProducts($fertilizersResult);
 $agrochemicals = fetchProducts($agrochemicalsResult);
+
 
 ?>
 
@@ -223,7 +225,7 @@ $agrochemicals = fetchProducts($agrochemicalsResult);
                 <?php foreach ($fertilizers as $fertilizer): ?>
                     <li class="item" data-id="<?php echo $fertilizer['product_id']; ?>">
                         <img src="<?php echo $fertilizer['image_path']; ?>" alt="<?php echo $fertilizer['productName']; ?>">
-                        <?php echo $fertilizer['productName']; ?> - ksh<?php echo number_format($fertilizer['price'], 2); ?>
+                        <?php echo $fertilizer['productName']; ?> - ksh<?php echo $fertilizer['price'];?>
                         <button onclick="addToCart(<?php echo $fertilizer['product_id']; ?>)">Add to Cart</button>
                     </li>
                 <?php endforeach; ?>
@@ -234,7 +236,7 @@ $agrochemicals = fetchProducts($agrochemicalsResult);
                 <?php foreach ($agrochemicals as $agrochemical): ?>
                     <li class="item" data-id="<?php echo $agrochemical['product_id']; ?>">
                         <img src="<?php echo $agrochemical['image_path']; ?>" alt="<?php echo $agrochemical['productName']; ?>">
-                        <?php echo $agrochemical['productName']; ?> - ksh<?php echo number_format($agrochemical['price'], 2); ?>
+                        <?php echo $agrochemical['productName']; ?> - ksh<?php echo $agrochemical['price']; ?>
                         <button onclick="addToCart(<?php echo $agrochemical['product_id']; ?>)">Add to Cart</button>
                     </li>
                 <?php endforeach; ?>
@@ -256,65 +258,65 @@ $agrochemicals = fetchProducts($agrochemicalsResult);
         
     </div>
   
-            <p>Cart Total: ksh<span id="total">0.00</span><span id="btn"><button onclick="checkout()" id="checkoutbutton">Checkout</button></span></p>
+            <p>Cart Total: ksh<span id="total">0.00</span><span id="btn"><button onclick="checkout()" id="checkoutbutton">Done</button></span></p>
  
-            
-    <script>
+            <script>
 
-        var totalPrice = parseFloat(<?php echo $totalPrice ;?>);
-
-        // Cart array to store added items
+        let cartTotal = 0;
+        // Cart array to store added items with quantity
         const cart = [];
-        // Function to add an item to the cart
+
         function addToCart(itemId) {
-            // Select the item based on its data-id attribute
             const item = document.querySelector(`.item[data-id="${itemId}"]`);
-            const itemName = item.textContent.trim(); // Extract item name
-            const price = parseFloat(item.textContent.match(/\ksh([\d.]+)/)[1]); // Extract price from text
-             
-            // Create a cart item object
-            const cartItem = {
-                id: itemId,
-                name: itemName,
-                price: price
-            };
-            // Add the cart item to the cart array
-            cart.push(cartItem);
+            const itemName = item.textContent.trim();
+            const price = parseFloat(item.textContent.match(/\ksh([\d.]+)/)[1]);
+
+            const existingCartItem = cart.find(item => item.id === itemId);
+
+            if (existingCartItem) {
+                // If item already exists in the cart, update its quantity
+                existingCartItem.quantity += 1;
+            } else {
+                // Create a new cart item object
+                const cartItem = {
+                    id: itemId,
+                    name: itemName,
+                    price: price,
+                    quantity: 1
+                };
+                // Add the cart item to the cart array
+                cart.push(cartItem);
+            }
+
             // Update the cart display
             updateCart();
+            
             Swal.fire({
-            title: 'Item added to cart!',
-            icon: 'success',
-            timer: 700, // Auto-close the popup after 2 seconds (adjust as needed)
-            showConfirmButton: false,
-            customClass: {
-                popup: 'custom-popup-class', // Add your custom class for styling
-            },
-            width: '300px', // Adjust the width as needed
-        });
+                title: 'Item added to cart!',
+                icon: 'success',
+                timer: 700,
+                showConfirmButton: false,
+                customClass: {
+                    popup: 'custom-popup-class',
+                },
+                width: '300px',
+            });
         }
 
-        // Function to update the cart display
         function updateCart() {
             const cartCount = document.getElementById('cart-count');
             const cartDropdown = document.getElementById('cart-dropdown');
             const totalElement = document.getElementById('total');
 
-            
-
             cartDropdown.innerHTML = ''; // Clear the cart dropdown
 
             let total = 0;
+
             // Iterate through each item in the cart and update the display
             cart.forEach(item => {
                 const li = document.createElement('li');
                 li.classList.add('cart-item');
-
-                
-
-                //li.classList.add('cart-item');
-                li.textContent = `${item.name.split(' - ')[0]} - ${item.price.toFixed(2)}`;
-                //li.textContent = `${item.name} - $ksh{item.price.toFixed(2)}`;
+                li.textContent = `${item.name.split(' - ')[0]} - Quantity: ${item.quantity} - ${item.price.toFixed(2)}`;
 
                 const removeButton = document.createElement('button');
                 removeButton.textContent = 'Remove';
@@ -323,126 +325,101 @@ $agrochemicals = fetchProducts($agrochemicalsResult);
                 li.appendChild(removeButton);
                 cartDropdown.appendChild(li);
 
-                total += item.price;
-                // $_SESSION['total'] = total;
+                total += item.price * item.quantity;
             });
-            totalElement.textContent = total.toFixed(2);
-            
-            const totali=totalElement.textContent;
-            cartCount.textContent = cart.length;
 
-            return totali;
+            totalElement.textContent = total.toFixed(2);
+            const totali = totalElement.textContent;
+            cartCount.textContent = cart.reduce((count, item) => count + item.quantity, 0);
+
+            cartTotal = totali;
+         return totali;
+            
         }
 
-        // Function to remove an item from the cart
         function removeFromCart(itemId) {
             const itemIndex = cart.findIndex(item => item.id === itemId);
 
             if (itemIndex !== -1) {
-                cart.splice(itemIndex, 1);
+                if (cart[itemIndex].quantity > 1) {
+                    // If quantity is greater than 1, decrement the quantity
+                    cart[itemIndex].quantity -= 1;
+                } else {
+                    // If quantity is 1 or less, remove the item from the cart
+                    cart.splice(itemIndex, 1);
+                }
+
+                // Update the cart display
                 updateCart();
             }
         }
-       
-        // Function to simulate the checkout process
+
+        
         function checkout() {
-           
-            const cartTotal = updateCart(); // Get the total from the updateCart function
-            const grandTotal = parseFloat(cartTotal) + parseFloat(totalPrice);
-            const interest = grandTotal * 0.065;
-        // to send the grand total ndio isaviwe kwa session
             $.ajax({
-        type: 'POST',
-        url: 'setgrandtotal.php',
-        data: { grandTotal: grandTotal },
-        dataType: 'json',
+        url: 'setorders.php', // Replace with the actual server-side script
+        method: 'POST',
+        data: { cartTotal: cartTotal},
         success: function(response) {
-            if (response.success) {
-                console.log('Grand Total  stored successfully');
-            } else {
-                console.error('Error storing grand total:', response.message);
-            }
+            console.log('carttotal saved to session successfully.',response);
         },
         error: function() {
-            console.error('AJAX request to setgrandtotal.php failed');
+            console.error('Error saving carttotal to session.');
         }
     });
-
-    // to send the interest ndio isaviwe kwa session
-    // $.ajax({
-    //     type: 'POST',
-    //     url: 'setgrandtotal.php',
-    //     data: { interest: interest },
-    //     dataType: 'json',
-    //     success: function(response) {
-    //         if (response.success) {
-    //             console.log('Interest stored successfully');
-    //         } else {
-    //             console.error('Error storing interest:', response.message);
-    //         }
-    //     },
-    //     error: function() {
-    //         console.error('AJAX request to setgrandtotal.php failed');
-    //     }
-    // });
-    $.ajax({
+            $.ajax({
         type: 'POST',
-        url: 'setorders.php',
-        data: {
-            cartItems: JSON.stringify(cart),
-            grandTotal: grandTotal
-        },
+        url: 'setcarttotal.php', // Update the URL to the correct PHP script
+        data: { cartItems: JSON.stringify(cart) }, // Convert cart items to JSON
         dataType: 'json',
         success: function (response) {
             if (response.success) {
-                console.log('Order details saved successfully');
-                // Add any additional logic or redirect the user as needed
+                console.log('Cart items saved successfully',response);
             } else {
-                console.error('Error saving order details:', response.message);
-                // Handle error scenario
+                console.error('Error saving Cart items:', response.message);
             }
         },
-        error: function () {
-            console.error('AJAX request to save_order.php failed');
-            // Handle error scenario
+        error: function (xhr, status, error) {
+            console.error('AJAX request to savecartitems.php failed');
+            console.error('Status:', status);
+            console.error('Error:', error);
         }
     });
 
-    
-
-
-    
-    const cartItems = cart.map(item => `${item.name.split(' - ')[0]} - ${item.price.toFixed(2)}`);    Swal.fire({
-            title: 'Purchase Successful!',
-            html: `<p>Grand Total: ksh ${grandTotal.toFixed(2)}</p>
-                   <p>Successfully Purchased Items:</p>
-                   <ol style="text-align: left;">${cartItems.map(item => `<li>${item}</li>`).join('')}</ol>
-                   `,
-            icon: 'success',
-            customClass: {
-                popup: 'custom-popup-class', 
-                icon: 'custom-icon-class'
-            },
-            width: '400px', // Adjust the width as needed
-        });
-
-            //alert('Loan application has been submitted successfully.\nGrand Total: ksh'+ grandTotal.toFixed(2));
             
+
+
+            const cartItems = cart.map(item => `${item.name.split(' - ')[0]} - Quantity: ${item.quantity} - ${item.price.toFixed(2)}`);
+
+            Swal.fire({
+                title: 'Additional Cart items added successfully!',
+                html: `<p>Cart Total: ksh ${cartTotal}</p>
+                       <p>Successfully Added Items:</p>
+                       <ol style="text-align: left;">${cartItems.map(item => `<li>${item}</li>`).join('')}</ol>
+                       `,
+                icon: 'success',
+                customClass: {
+                    popup: 'custom-popup-class',
+                    icon: 'custom-icon-class'
+                },
+                width: '400px',
+            });
+
             cart.length = 0;
             updateCart();
-
-            
-            
         }
-        // Function to toggle the visibility of the cart dropdown
+        
+
         function toggleCartDropdown() {
             const cartDropdown = document.getElementById('cart-dropdown');
             cartDropdown.style.display = cartDropdown.style.display === 'block' ? 'none' : 'block';
         }
-        function calculateinterest(){
 
+        function calculateinterest() {
+            // Your calculation logic for interest
         }
-
     </script>
+    
 </body>
 </html>
+

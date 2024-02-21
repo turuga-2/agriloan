@@ -80,13 +80,43 @@ $idNumber = $_SESSION['idNumber'];
           </div>
 
           <?php
-      $sql = "SELECT fname FROM farmers WHERE idNumber = $idNumber";
-      $select = mysqli_query($conn, $sql);
-       if(mysqli_num_rows($select)> 0){
-        $fetch = mysqli_fetch_assoc($select);
-        $fname = $fetch['fname'];
+
+           try {        
+            $sql = "SELECT fname FROM farmers WHERE idNumber = $idNumber";
+            $select = mysqli_query($conn, $sql);
         
-       }?>
+            if (!$select) {
+                throw new Exception("Error executing query: " . mysqli_error($conn));
+            }
+        
+            if (mysqli_num_rows($select) > 0) {
+                $fetch = mysqli_fetch_assoc($select);
+                $fname = $fetch['fname'];
+            }
+        
+            $statussql = "SELECT loanstatus FROM loans WHERE F_idNumber = '$idNumber'";
+            $statusselect = mysqli_query($conn, $statussql);
+        
+            if (!$statusselect) {
+                throw new Exception("Error executing query: " . mysqli_error($conn));
+            }
+        
+            if (mysqli_num_rows($statusselect) > 0) {
+                $fetch = mysqli_fetch_assoc($statusselect);
+                $dbloanstatus = $fetch['loanstatus'];
+            }
+        
+        } catch (Exception $e) {
+            // Handle the exception, you can log or display an error message as needed
+            echo "Error: " . $e->getMessage();
+        } finally {
+            // Close the database connection
+            if ($conn) {
+                mysqli_close($conn);
+            }
+        }
+       
+       ?>
 
   
         
@@ -95,7 +125,7 @@ $idNumber = $_SESSION['idNumber'];
         
 
 
-          <h4> Your loan status is (Will be gotten from the database)
+          <h4> Your loan status is <?php echo $dbloanstatus; ?>
           </h4>
           <p> Here we are to have the news related to their individual farming kama for example if <br>
             If ni january ni dry season advice watu wadry mahindi

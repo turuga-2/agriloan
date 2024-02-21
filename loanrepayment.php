@@ -1,8 +1,10 @@
-<?php include "config/databaseconfig.php";
+<?php 
 session_start();
+include "config/databaseconfig.php";
+$grandtotal = $_SESSION['grandtotal'];
+$interest = $_SESSION['interest'];
+include "processloan.php";
 
-$grandTotal = $_SESSION['grandTotal']  ;
-$interest = $_SESSION['interest']  ;
 ?>
 <!DOCTYPE html>
 <html>
@@ -134,7 +136,7 @@ $interest = $_SESSION['interest']  ;
            
            <div class="weekly">
             In this bundle you get to repay your loan weekly
-            <p>Your loan amount is <?php echo $grandTotal;?></p>
+            <p>Your loan amount is <?php echo $grandtotal;?></p>
             <p>Your interest is <?php echo $interest;?></p>
             Weekly amount payable is 
 
@@ -142,7 +144,7 @@ $interest = $_SESSION['interest']  ;
            </div>
            <div class="monthly">
             In this bundle you get to repay your loan monthly
-            <p>Your loan amount is <?php echo $grandTotal;?></p>
+            <p>Your loan amount is <?php echo $grandtotal;?></p>
             Your interest is 
             Monthly amount payable is 
 

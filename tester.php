@@ -2,7 +2,7 @@
 session_start();
 $idNumber = $_SESSION['idNumber'];
 // Retrieve the cart total from the session
-$cartTotal = isset($_SESSION['cartTotal']) ? $_SESSION['cartTotal'] : 0;
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -232,6 +232,7 @@ $cartTotal = isset($_SESSION['cartTotal']) ? $_SESSION['cartTotal'] : 0;
     }
   </style>
  <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+ <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 </head>
 <body>
 
@@ -252,45 +253,10 @@ $cartTotal = isset($_SESSION['cartTotal']) ? $_SESSION['cartTotal'] : 0;
         <a href="logout.php">Logout </a>
   </div>
 
-  <div class="progress-bar">
-    <div class="progress-step financialDetails">Financial Details</div>
-    <div class="progress-step farmDetails">Farm Details</div>
-  </div>
-
-    <!-- Step 1: Personal Details -->
-  
-   <!-- Step 2: Financial Details -->
-  <div id="financialDetails" class="form-container" style="display: block;">
-    <div id="step2" class="financialdetails">
-      <!-- ... -->
-      <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"])?>" method="post" enctype="multipart/form-data">
-    <h2>Financial details</h2>
-        <p>insert a copy of your CRB clearance certificate below</p>
-        <label for="crbcert">Choose a PDF file:</label>
-        <input type="file" id="crbcert" name="crbcert" accept=".pdf">
-        <br>
-
-        <p><br>insert a copy of your current bank statement below</p>
-        <label for="bankstmt">Choose a PDF file:</label>
-        <input type="file" id="bankstmt" name="bankstmt" accept=".pdf">
-        <br>
-
-        <p><br>insert a copy of your title deed below</p>
-        <label for="deed">Choose a PDF file:</label>
-        <input type="file" id="deed" name="deed" accept=".pdf">
-        <br>
-
-      
-        <input type="submit" value="Upload" class="btn">
-      </form>
-        
-        <button onclick="nextStep('farmDetails')">Next</button>
-      
-    </div>
-  </div>
+  <button onclick="startApplication()">Start Application Process</button>
 
       <div id="farmDetails" class="form-container">
-      <div id="step3" class="farmdetails">
+      <div class="farmdetails">
       <h2>Loan details</h2>
         
             <h4>Please enter your acreage </h4>
@@ -357,53 +323,19 @@ $cartTotal = isset($_SESSION['cartTotal']) ? $_SESSION['cartTotal'] : 0;
 
        </div>
 
-       <button onclick="prevStep('financialDetails')">Previous</button>
-       <button type="submit">Submit</button>    
+      
+       <button type="submit" onclick="loantotal()">Submit Application</button>    
             
     </div>
       
     </div>
     
+    
     <script>
-  function nextStep(nextStepId) {
-    var currentStep = document.querySelector('.form-container[style="display: block;"]');
-    var nextStep = document.getElementById(nextStepId);
-
-    if (currentStep && nextStep) {
-      currentStep.style.display = 'none';
-      nextStep.style.display = 'block';
-
-      updateProgressBar(nextStepId);
+         function startApplication() {
+      // Show the farmDetails div
+      document.getElementById('farmDetails').style.display = 'block';
     }
-  }
-
-  function prevStep(prevStepId) {
-    var currentStep = document.querySelector('.form-container[style="display: block;"]');
-    var prevStep = document.getElementById(prevStepId);
-
-    if (currentStep && prevStep) {
-      currentStep.style.display = 'none';
-      prevStep.style.display = 'block';
-
-      updateProgressBar(prevStepId);
-    }
-  }
-
-  function updateProgressBar(activeStepId) {
-    var steps = document.querySelectorAll('.progress-step');
-    steps.forEach(function (step) {
-      step.classList.remove('active');
-    });
-
-    var activeStep = document.querySelector('.' + activeStepId);
-    if (activeStep) {
-      activeStep.classList.add('active');
-    }
-  }
-</script>
-    <script>
-
-    // Get the input element reference
     var acresInput = document.getElementById('acres');
     // Variable to store the entered value
     let enteredValue = 0;
@@ -413,56 +345,53 @@ $cartTotal = isset($_SESSION['cartTotal']) ? $_SESSION['cartTotal'] : 0;
         enteredValue = parseFloat(acresInput.value) || 0; // Convert to a float or default to 0 if not a valid number
         console.log('Entered Value:', enteredValue);
     });
+    
 
-    var totalPrice = 0;
+    var bundlePrice = 0;
      // Echo the PHP variable into a JavaScript variable
-     var cartTotal = <?php echo $cartTotal; ?>;
+     
 
      // Use the value of acres as the multiplier
      const multiplier = parseFloat(acresInput.value) || 1; // Default to 1 if the input is not a valid number
 
 
-    function updateTotalPrice() {
+    function updateBundlePrice() {
 
       // Get the input element reference
       const acresInput = document.getElementById('acres');
 
-        // Reset total price
-        totalPrice = 0;
+        // Reset bundle price
+        bundlePrice = 0;
 
         // Check if the maize bundle is selected
         const maizeBundle = document.querySelector('.maizebundle');
         if (maizeBundle.classList.contains('selected')) {
-            totalPrice += calculateBundleTotal('.maizebundleproducts');
+            bundlePrice += calculateBundleTotal('.maizebundleproducts');
         }
 
         // Check if the beans bundle is selected
         const beansBundle = document.querySelector('.beansbundle');
         if (beansBundle.classList.contains('selected')) {
-            totalPrice += calculateBundleTotal('.beansbundleproducts');
+            bundlePrice += calculateBundleTotal('.beansbundleproducts');
         }
 
-        console.log('Bundle Price:', totalPrice);
+        console.log('Bundle Price:', bundlePrice);
 
-          // Make an AJAX request to set_totals.php to store the total price in the session
-    $.ajax({
-        type: 'POST',
-        url: 'set_totals.php',
-        data: { totalPrice: totalPrice },
-        dataType: 'json',
+        $.ajax({
+        url: 'setorders.php', // Replace with the actual server-side script
+        method: 'POST',
+        data: { bundlePrice: bundlePrice},
         success: function(response) {
-            if (response.success) {
-                console.log('Total price stored successfully');
-            } else {
-                console.error('Error storing total price:', response.message);
-            }
+            console.log('bundlePrice saved to session successfully.');
         },
         error: function() {
-            console.error('AJAX request to set_totals.php failed');
+            console.error('Error saving bundlePrice to session.');
         }
     });
 
-    return totalPrice;
+          // Make an AJAX request to set_totals.php to store the total price in the session
+
+    return bundlePrice;
 }
     function calculateBundleTotal(productClass) {
         // Calculate the total price for the selected bundle
@@ -497,35 +426,9 @@ $cartTotal = isset($_SESSION['cartTotal']) ? $_SESSION['cartTotal'] : 0;
     selectedBundle.classList.toggle('selected');
 
     // Update the total price based on the selected bundle
-    const totalPrice = updateTotalPrice();
+    const bundlePrice = updateBundlePrice();
 
-    // Get additional data
-    const idNumber = '<?php echo $idNumber; ?>'; // Replace with your actual session variable or user data
-    const orderId = 1; // You should generate a unique order ID or fetch it from your database
-
-    // Make an AJAX request to store the data in the database
-    $.ajax({
-        type: 'POST',
-        url: 'setbundle.php', // Create this PHP file to handle database insertion
-        data: {
-            idNumber: idNumber,
-            orderId: orderId,
-            acreage:multiplier,
-            bundle: bundle,
-            totalPrice: totalPrice
-        },
-        dataType: 'json',
-        success: function (response) {
-            if (response.success) {
-                console.log('Data stored in the database successfully');
-            } else {
-                console.error('Error storing data:', response.message);
-            }
-        },
-        error: function () {
-            console.error('AJAX request to store_loan_data.php failed');
-        }
-    });
+    
     }
 
     function loadCart(pageUrl) {
@@ -543,13 +446,83 @@ $cartTotal = isset($_SESSION['cartTotal']) ? $_SESSION['cartTotal'] : 0;
         });
     }
 
-    function checkout() {
+    function loantotal() {
+      var bundlePrice = updateBundlePrice(); 
+      bundlePrice = parseFloat(bundlePrice.toFixed(2));
+
+       // PHP session variable cartTotal is echoed as a JavaScript variable
+      <?php
+      $cartTotal = isset($_SESSION['cartTotal']) ? $_SESSION['cartTotal'] : 0;
+      echo "var cartTotal = $cartTotal;";
+      ?>
+      console.log('sessioncartTotal : ' + cartTotal); 
+   
+    
+    // Calculate loan total
+    var loantotal = bundlePrice + parseFloat(cartTotal);
+
+    // Calculate interest (6.5% of the loan total)
+    const interestRate = 0.065;
+    const interest = loantotal * interestRate;
+
+    // Calculate grand total and round to two decimal places
+    var grandtotal = (loantotal + interest).toFixed(2);
+
+    // Log the results to the console and display with two decimal places
+    console.log('loantotal: ' + loantotal.toFixed(2));
+    console.log('interest: ' + interest.toFixed(2)); 
+    console.log('grandtotal: ' + grandtotal);
+    
+    $.ajax({
+        url: 'processloan.php',
+        method: 'POST',
+        data: {
+          enteredValue: enteredValue,
+          bundlePrice: bundlePrice,
+          loantotal: loantotal,
+          interest: interest,
+          grandtotal: grandtotal
+        },
+        success: function(response) {
+            console.log(response);
+            console.log('loan processed  successfully.');
+        },
+        error: function() {
+            console.error('Error processing loan.');
         
-        alert('Loan application has been submitted successfully');
-        console.log('Bundle Price:', cartTotal);
-    }
+        }
+    });
+
+    
+        
+        
+        //   Swal.fire({
+        //     title: 'Loan application submitted successfully!',
+        //     html: `<p>Your loan status is Pending</p>
+        //     <p>Total Loan Amount : ksh ${loantotal.toFixed(2)}</p>
+        //            <p>Successfully Added Items:</p>
+        //            <ol style="text-align: left;">${cartItems.map(item => `<li>${item}</li>`).join('')}</ol>
+        //            `,
+        //     icon: 'success',
+        //     customClass: {
+        //         popup: 'custom-popup-class', 
+        //         icon: 'custom-icon-class'
+        //     },
+        //     width: '400px', // Adjust the width as needed
+        // });
+
+
+       
+
+
+       // return loantotal;
+
+}
 </script>
        
 
 </body>
 </html>
+
+    
+    

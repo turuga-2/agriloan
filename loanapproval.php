@@ -22,7 +22,7 @@ session_start();?>
 
         #sidebar {
             height: 100%;
-            width: 250px;
+            width: 150px;
             position: fixed;
             left: 0;
             background-color: #333;
@@ -43,8 +43,8 @@ session_start();?>
         }
 
         #content {
-            margin-left: 500px;
-            padding: 20px;
+            margin-left: 750px;
+            padding: 40px;
         }
         #loanform{
             margin-left: 500px;
@@ -67,39 +67,47 @@ session_start();?>
     </header>
 
 
-    <!-- <div id="sidebar">
+    <div id="sidebar">
         <a href="adminhome.php">Home</a>
-        <a href="registeration.php">Register agrodealer</a>
         <a href="reports.php">Generate reports</a>
         <a href="loanapproval.php">Loan Approval</a>
         <a href="logoutadmin.php">Logout</a>
-    </div> -->
+    </div> 
 <div class="content">
 
 
     <!-- HTML form with a button -->
-        <form id="loanForm">
+        <form id="loanForm"onsubmit="return fetchDetailsAndPredictLoan(event)">
         <h1>Fetch Farmer Details</h1>
 
         <label for="idNumber">Enter Farmer's ID Number:</label>
             <input type="text" id="idNumber" placeholder="Enter ID Number" required>
-            <button type="submit">Get Details</button>
+            <button type="submit" onclick="updateDetailsContainer()">Get Details</button>
 
-        <!-- <button type="button" onclick="predictLoan()">Predict Loan</button>-->
-        <button type="button" onclick="updateDetailsContainer()">Show farmer details</button> 
-
+        <button type="button" onclick="predictLoan(responseData)">Predict Loan</button>
         </form>
 
 
         <!-- Display retrieved details -->
         <div id="detailsContainer" >
         <h2>Farmer Details</h2>
-        <button type="button" onclick="updateDetailsContainer()">Show farmer details</button>
+        
+        <div id="statusresultContainer">
 
+        </div>
         
         </div>
+        <div id="resultContainer">
+
+</div>
 </div>
 <script>
+    // Define the toggleDetailsContainer function
+    let responseData
+    function toggleDetailsContainer() {
+        $('#detailsContainer').toggle();
+    }
+    
   function fetchDetailsAndPredictLoan(event) {
     event.preventDefault();
 
@@ -113,6 +121,8 @@ session_start();?>
         success: function(response) {
             if (response.success) {
                 updateDetailsContainer(response.data);
+                responseData = response.data
+                console.log('resoonseswwas', responseData)
             } else {
                 console.error('Error fetching farmer details:', response.message);
             }
@@ -121,6 +131,7 @@ session_start();?>
             console.error('AJAX request to fetchfarmerdetails.php failed');
         }
     });
+    return false; // Prevent the default form submission behavior
 }
 
 // Update your updateDetailsContainer function
@@ -130,9 +141,21 @@ function updateDetailsContainer(data) {
     
     // Display the fetched data in the container
     if (data) {
-        detailsContainer.append('<p>idNumber: ' + data.idNumber + '</p>');
-        detailsContainer.append('<p>fname: ' + data.fname + '</p>');
-        // Add more details as needed
+        detailsContainer.append('<p>IdNumber: ' + data.idNumber + '</p>');
+        detailsContainer.append('<p>Name: ' + data.fname + data.lname + '</p>');
+        detailsContainer.append('<p>Phone Number: ' + data.phoneNumber + '</p>');
+        detailsContainer.append('<p>Email Address: ' + data.email + '</p>');
+        detailsContainer.append('<p>County: ' + data.county + '</p>');
+        detailsContainer.append('<p>Gender: ' + data.gender + '</p>');
+        detailsContainer.append('<p>Marital Status: ' + data.maritalstatus + '</p>');
+        detailsContainer.append('<p>Number of Dependents: ' + data.dependents + '</p>');
+        detailsContainer.append('<p>Education Level: ' + data.educationlevel + '</p>');
+        detailsContainer.append('<p>Employment: ' + data.employment + '</p>');
+        detailsContainer.append('<p>Income: ' + data.income + '</p>');
+
+
+
+        // Add more details as `needed`
     } else {
         detailsContainer.append('<p>No details found for the given ID number</p>');
     }
@@ -141,17 +164,56 @@ function updateDetailsContainer(data) {
     toggleDetailsContainer();
 }
 
-// function predictLoan(farmerData) {
-//     // Use farmerData in place of the hardcoded input_data
-//     // You can access the fields like farmerData.Gender, farmerData.Married, etc.
-//     // Perform your loan prediction logic here
-//     // ...
-// }
+function predictLoan(response) {
+    console.log('redpons', response)
+    if (response) {
+        // Extract relevant data for loan prediction
+        var input_data = {
+            'Gender': response.gender === 'male' ? '1' : '0',
+            'Married': response.maritalstatus === 'Married' ? '1' : '0',
+            'Dependents': response.dependents,
+            'Education': response.educationlevel === 'Graduate' ? '1' : '0',
+            'ApplicantIncome': response.income,
+            // 'LoanAmount': response.loanAmount === response.loanAmount ? response.loanAmount : '5000',  // Add the correct property name for loan amount
+            // 'Loan_Amount_Term': response.loanTerm === response.Loan_Amount_Term ? response.Loan_Amount_Term : '360',  // Add the correct property name for loan term
+            'LoanAmount': '500000', 
+            'Loan_Amount_Term': '360',
+            'Credit_History': response.creditHistory === '1' ? 1 : 0
+        };
+        console.log('inpuuttt', input_data)
+        // Convert data to JSON format
+        var json_data = JSON.stringify(input_data);
 
-// // Example: Call fetchDetailsAndPredictLoan when the button is clicked
-// $('#predictLoanBtn').click(function() {
-//     fetchDetailsAndPredictLoan();
-// });
+        // API endpoint
+        var api_url = 'http://127.0.0.1:5000/predict_loan_approval';
+
+        // Make a POST request using jQuery
+        $.ajax({
+            type: 'POST',
+            url: api_url,
+            contentType: 'application/json',
+            data: json_data,
+            success: function(predictionResponse) {
+                console.log('Loan Prediction Result:',predictionResponse.prediction)
+                // Display input data
+                var resultContainer = $('#resultContainer');
+                resultContainer.html('Input Data: <pre>' + JSON.stringify(input_data, null, 2) + '</pre>');
+
+                // Display prediction result
+                if (predictionResponse && predictionResponse.prediction !== undefined) {
+                    resultContainer.append('Loan Prediction Result: ' + predictionResponse.prediction);
+                } else {
+                    resultContainer.append('Error in API response');
+                }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                resultContainer.html('Error in making API request: ' + textStatus + ' - ' + errorThrown);
+            }
+        });
+    } else {
+        console.error('Invalid response from fetchfarmerdetails.php');
+    }
+}
 
 </script>
     
@@ -160,16 +222,4 @@ function updateDetailsContainer(data) {
 </body>
 
 </html>
-<?php
-    $idNumber = $_SESSION['idNumber'];
-    // Use prepared statements to prevent SQL injection
-    $sql = "SELECT * FROM farmers WHERE idNumber = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("s", $idNumber);
-    $stmt->execute();
-    $result = $stmt->get_result();
 
-    if ($result->num_rows > 0) {
-        $fetch = $result->fetch_assoc();}
-
-?>

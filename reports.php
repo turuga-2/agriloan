@@ -106,7 +106,6 @@ session_start();?>
 
     <div id="sidebar">
         <a href="adminhome.php">Home</a>
-        <a href="registeration.php">Register agrodealer</a>
         <a href="reports.php">Generate reports</a>
         <a href="loanapproval.php">Loan Approval</a>
         <a href="logoutadmin.php">Logout</a>
