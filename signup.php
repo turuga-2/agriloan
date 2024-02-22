@@ -146,10 +146,6 @@ input[type="submit"]{
                 <label>Monthly Income: </label>
                 <input type="number" id="income" name="income"  min="0" placeholder="0" required>
 
-                <p>insert a copy of your CRB clearance certificate below</p>
-                <label for="crbcertpath">Choose a PDF file:</label>
-                <input type="file" id="crbcertpath" name="crbcertpath" accept=".pdf">
-
 
             <label for="password">Password</label>
             <input type="password" id="password" name="password" placeholder="Password" required>
@@ -218,17 +214,7 @@ input[type="submit"]{
     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
         
-       // File upload handling
-       $uploadDir = "uploads/";
-       $crbCertPath = $uploadDir . basename($_FILES["crbcertpath"]["name"]);
-
-       // Upload the file
-       if (move_uploaded_file($_FILES["crbcertpath"]["tmp_name"], $crbCertPath)) {
-           echo "File uploaded successfully.";
-       } else {
-           throw new Exception("Error uploading file.");
-       }
-
+      
        // Insert data into the database
        $sql = "INSERT INTO `farmers` (`idNumber`, `fname`, `lname`, `phoneNumber`, `email`, `county`, `gender`, `maritalstatus`, `dependents`, `educationlevel`, `employment`, `income`, `crbcertpath`, `password`) 
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";

@@ -22,8 +22,8 @@ session_start();?>
 
         #sidebar {
             height: 100%;
-            width: 150px;
-            position: fixed;
+            width: 250px;
+            position: absolute;
             left: 0;
             background-color: #333;
             padding-top: 20px;
@@ -54,10 +54,40 @@ session_start();?>
             
             background-color: pink;
         }
-        
+        #detailsTable{
+            width: 70%;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+         #detailsTable th,
+         #detailsTable td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+         #detailsTable th {
+            background-color: #333;
+            color: white;
+        }
+
+        /* Style for delete button */
+        .Btn {
+            background-color: #e44d26;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
         
     </style>
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
 </head>
 
@@ -67,40 +97,87 @@ session_start();?>
     </header>
 
 
-    <div id="sidebar">
+     <div id="sidebar">
         <a href="adminhome.php">Home</a>
         <a href="reports.php">Generate reports</a>
         <a href="loanapproval.php">Loan Approval</a>
         <a href="logoutadmin.php">Logout</a>
-    </div> 
+    </div>  
 <div class="content">
-
-
-    <!-- HTML form with a button -->
-        <form id="loanForm"onsubmit="return fetchDetailsAndPredictLoan(event)">
-        <h1>Fetch Farmer Details</h1>
-
-        <label for="idNumber">Enter Farmer's ID Number:</label>
-            <input type="text" id="idNumber" placeholder="Enter ID Number" required>
-            <button type="submit" onclick="updateDetailsContainer()">Get Details</button>
-
-        <button type="button" onclick="predictLoan(responseData)">Predict Loan</button>
-        </form>
-
-
-        <!-- Display retrieved details -->
-        <div id="detailsContainer" >
-        <h2>Farmer Details</h2>
         
-        <div id="statusresultContainer">
 
+        <!-- Display retrieved details 
+        <div id="detailsContainer" >-->
+        <table id="detailsTable">
+                <thead>
+                    Pending loans
+                    <tr>
+                        <th>Loan Id</th>
+                        <th>IdNumber</th>
+                        <th>Name</th>
+                        <th>Gender</th>
+                        <th>Marital Status</th>
+                        <th>Dependents</th>
+                        <th>Education Level</th>
+                        <th>Employment</th>
+                        <th>Income</th>
+                        <th>Loan Amount</th>
+                        <th>Loan Status</th>
+                        <th>Credit_History</th>
+                        <th>Actions</th>
+
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php
+                    try {
+                        // Fetch data from the farmers table
+                        $sql = "SELECT * FROM farmer_details WHERE loanstatus = 'Pending'";                        $result = mysqli_query($conn, $sql);
+
+                        if ($result === false) {
+                            throw new Exception("Error executing the query: " . mysqli_error($conn));
+                        }
+
+                        if (mysqli_num_rows($result) > 0) {
+
+                            while ($row = mysqli_fetch_assoc($result)) {
+                                echo "<tr id='row_" . $row['loanid'] . "'>";
+                                echo "<td>" . $row['loanid'] . "</td>";
+                                echo "<td>" . $row['idNumber'] . "</td>";
+                                echo "<td>" . $row['fname'] . "</td>";
+                                echo "<td>" . $row['gender'] . "</td>";
+                                echo "<td>" . $row['maritalstatus'] . "</td>";
+                                echo "<td>" . $row['dependents'] . "</td>";
+                                echo "<td>" . $row['educationlevel'] . "</td>";
+                                echo "<td>" . $row['employment'] . "</td>";
+                                echo "<td>" . $row['income'] . "</td>";
+                                echo "<td>" . $row['loaned_amount'] . "</td>";
+                                echo "<td>" . $row['Credithistory'] . "</td>";
+                                echo "<td>" . $row['loanstatus'] . "</td>";
+
+                                echo "<td><button class='Btn' onclick='fetchDetailsAndPredictLoan(\"" . $row['loanid'] . "\")'>Get Details</button></td>";
+                                echo "<td><button class='Btn'onclick='predictLoan(responseData)'> Predict Loan </button> </td>";
+                                echo "<td><button class='Btn' onclick='approve(\"" . $row['loanid'] . "\")'> Approve </button> </td>";
+                                echo "<td><button class='Btn' onclick='deny(\"" . $row['loanid'] . "\")'> Deny </button> </td>";
+
+
+                                echo "</tr>";
+                            }
+                        } else {
+                            echo "<p>No data found</p>";
+                        }
+                    } catch (Exception $e) {
+                        echo "Error: " . $e->getMessage();
+                    }
+                    mysqli_close($conn);
+                    ?>
+                </tbody>
+            </table>
         </div>
-        
-        </div>
-        <div id="resultContainer">
 
 </div>
 </div>
+
 <script>
     // Define the toggleDetailsContainer function
     let responseData
@@ -108,15 +185,15 @@ session_start();?>
         $('#detailsContainer').toggle();
     }
     
-  function fetchDetailsAndPredictLoan(event) {
+  function fetchDetailsAndPredictLoan(loanid) {
     event.preventDefault();
 
-    var idNumber = $('#idNumber').val();
+    
 
     $.ajax({
         url: 'fetchfarmerdetails.php',
         type: 'POST',
-        data: { idNumber: idNumber },
+        data: { loanid: loanid },
         dataType: 'json',
         success: function(response) {
             if (response.success) {
@@ -136,32 +213,32 @@ session_start();?>
 
 // Update your updateDetailsContainer function
 function updateDetailsContainer(data) {
-    var detailsContainer = $('#detailsContainer');
-    detailsContainer.html('<h2>Farmer Details</h2>');
-    
-    // Display the fetched data in the container
     if (data) {
-        detailsContainer.append('<p>IdNumber: ' + data.idNumber + '</p>');
-        detailsContainer.append('<p>Name: ' + data.fname + data.lname + '</p>');
-        detailsContainer.append('<p>Phone Number: ' + data.phoneNumber + '</p>');
-        detailsContainer.append('<p>Email Address: ' + data.email + '</p>');
-        detailsContainer.append('<p>County: ' + data.county + '</p>');
-        detailsContainer.append('<p>Gender: ' + data.gender + '</p>');
-        detailsContainer.append('<p>Marital Status: ' + data.maritalstatus + '</p>');
-        detailsContainer.append('<p>Number of Dependents: ' + data.dependents + '</p>');
-        detailsContainer.append('<p>Education Level: ' + data.educationlevel + '</p>');
-        detailsContainer.append('<p>Employment: ' + data.employment + '</p>');
-        detailsContainer.append('<p>Income: ' + data.income + '</p>');
-
-
-
-        // Add more details as `needed`
+        Swal.fire({
+            title: 'Farmer Details',
+            html:
+                '<p><strong>Loanid:</strong> ' + data.loanid + '</p>' +
+                '<p><strong>IdNumber:</strong> ' + data.idNumber + '</p>' +
+                '<p><strong>Name:</strong> ' + data.fname + '</p>' +
+                '<p><strong>Gender:</strong> ' + data.gender + '</p>' +
+                '<p><strong>Marital Status:</strong> ' + data.maritalstatus + '</p>' +
+                '<p><strong>Number of Dependents:</strong> ' + data.dependents + '</p>' +
+                '<p><strong>Education Level:</strong> ' + data.educationlevel + '</p>' +
+                '<p><strong>Employment:</strong> ' + data.employment + '</p>' +
+                '<p><strong>Income:</strong> ' + data.income + '</p>' +
+                '<p><strong>Loaned amount:</strong> ' + data.loaned_amount + '</p>' +
+                '<p><strong>Credit history:</strong> ' + data.Credithistory + '</p>' +
+                '<p><strong>Loan status:</strong> ' + data.loanstatus + '</p>',
+            icon: 'info'
+        });
     } else {
-        detailsContainer.append('<p>No details found for the given ID number</p>');
+        Swal.fire({
+            title: 'No details found',
+            text: 'No details found for the given ID number',
+            icon: 'warning'
+        });
     }
-
-    // Show the details container
-    toggleDetailsContainer();
+    
 }
 
 function predictLoan(response) {
@@ -170,15 +247,15 @@ function predictLoan(response) {
         // Extract relevant data for loan prediction
         var input_data = {
             'Gender': response.gender === 'male' ? '1' : '0',
-            'Married': response.maritalstatus === 'Married' ? '1' : '0',
+            'Married': response.maritalstatus === 'married' ? '1' : '0',
             'Dependents': response.dependents,
-            'Education': response.educationlevel === 'Graduate' ? '1' : '0',
+            'Education': response.educationlevel === 'graduate' ? '1' : '0',
             'ApplicantIncome': response.income,
             // 'LoanAmount': response.loanAmount === response.loanAmount ? response.loanAmount : '5000',  // Add the correct property name for loan amount
             // 'Loan_Amount_Term': response.loanTerm === response.Loan_Amount_Term ? response.Loan_Amount_Term : '360',  // Add the correct property name for loan term
-            'LoanAmount': '500000', 
+            'LoanAmount': response.loaned_amount, 
             'Loan_Amount_Term': '360',
-            'Credit_History': response.creditHistory === '1' ? 1 : 0
+            'Credit_History': response.Credithistory === '1' ? 1 : 0
         };
         console.log('inpuuttt', input_data)
         // Convert data to JSON format
@@ -199,12 +276,22 @@ function predictLoan(response) {
                 var resultContainer = $('#resultContainer');
                 resultContainer.html('Input Data: <pre>' + JSON.stringify(input_data, null, 2) + '</pre>');
 
-                // Display prediction result
-                if (predictionResponse && predictionResponse.prediction !== undefined) {
-                    resultContainer.append('Loan Prediction Result: ' + predictionResponse.prediction);
-                } else {
-                    resultContainer.append('Error in API response');
-                }
+                // Display prediction result using SweetAlert2
+if (predictionResponse && predictionResponse.prediction !== undefined) {
+    // Use SweetAlert2 to show the prediction result
+    Swal.fire({
+        title: 'Loan Prediction Result',
+        text: 'Prediction: ' + predictionResponse.prediction,
+        icon: 'info'
+    });
+} else {
+    // Show an error message if the prediction result is not available
+    Swal.fire({
+        title: 'Error',
+        text: 'Error in API response',
+        icon: 'error'
+    });
+}
             },
             error: function(jqXHR, textStatus, errorThrown) {
                 resultContainer.html('Error in making API request: ' + textStatus + ' - ' + errorThrown);
@@ -213,6 +300,74 @@ function predictLoan(response) {
     } else {
         console.error('Invalid response from fetchfarmerdetails.php');
     }
+}
+function approve (loanid){
+    Swal.fire({
+            title: 'Are you sure?',
+            text: 'You want to approve this loan?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, approve it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Call a PHP script to handle the deletion
+                $.ajax({
+                    type: 'POST',
+                    url: 'approval.php', // Adjust the file name accordingly
+                    data: { loanid: loanid },
+                    success: function (response) {
+                        // Handle the response (e.g., show a success message)
+                        Swal.fire({
+                            title: 'Approved!',
+                            text: 'The Loan has been approved.',
+                            icon: 'success'
+                        });
+                        
+                        $(`#row_${loanid}`).remove();
+                    },
+                    error: function (xhr, status, error) {
+                        // Handle errors
+                        console.error(xhr.responseText);
+                    }
+                });
+            }
+        });
+}
+function deny (loanid){
+    Swal.fire({
+            title: 'Are you sure?',
+            text: 'You want to deny this loan?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, deny it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Call a PHP script to handle the deletion
+                $.ajax({
+                    type: 'POST',
+                    url: 'deny.php', // Adjust the file name accordingly
+                    data: { loanid: loanid },
+                    success: function (response) {
+                        // Handle the response (e.g., show a success message)
+                        Swal.fire({
+                            title: 'Denied!',
+                            text: 'The Loan has been denied.',
+                            icon: 'success'
+                        });
+                        
+                        $(`#row_${loanid}`).remove();
+                    },
+                    error: function (xhr, status, error) {
+                        // Handle errors
+                        console.error(xhr.responseText);
+                    }
+                });
+            }
+        });
 }
 
 </script>

@@ -2,14 +2,15 @@
 <?php
         session_start();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            if (isset($_POST['idNumber'])) {
-                $idNumber = $_POST['idNumber'];
-                $_SESSION['idNumber'] = $idNumber;
+            if (isset($_POST['loanid'])) {
+                $loanid = $_POST['loanid'];
+                $_SESSION['loanid'] = $loanid;
 
                 // Use prepared statements to prevent SQL injection
-                $sql = "SELECT * FROM farmers WHERE idNumber = ?";
+                
+                $sql = "SELECT * FROM farmer_details WHERE loanid = ?";
                 $stmt = $conn->prepare($sql);
-                $stmt->bind_param("s", $idNumber);
+                $stmt->bind_param("s", $loanid);
                 $stmt->execute();
                 $result = $stmt->get_result();
 

@@ -1,5 +1,6 @@
 <?php 
 session_start();
+//include "processloan.php";
 include "config/databaseconfig.php";
 $grandtotal = $_SESSION['grandtotal'];
 $interest = $_SESSION['interest'];

@@ -132,7 +132,6 @@ session_start();
     <div id="top">
         <!-- Your main content goes here -->
         <h1>Welcome to the Admin Dashboard</h1>
-        <p>Select an option from the sidebar to navigate to different pages.</p>
         <h3>Quick actions</h3>
     </div>
 
@@ -145,6 +144,7 @@ session_start();
                         <th>ID</th>
                         <th>Agrodealer Name</th>
                         <th>Region</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -277,7 +277,7 @@ console.log('Data to be sent:', { agrodealerName, agrodealerRegion });
 }
 
         // Function to delete a farmer record
-        function deleteAgrodealer(idNumber) {
+        function deleteAgrodealer(id) {
         // Use SweetAlert2 to confirm the deletion
         Swal.fire({
             title: 'Are you sure?',
@@ -292,18 +292,18 @@ console.log('Data to be sent:', { agrodealerName, agrodealerRegion });
                 // Call a PHP script to handle the deletion
                 $.ajax({
                     type: 'POST',
-                    url: 'deletefarmer.php', // Adjust the file name accordingly
-                    data: { idNumber: idNumber },
+                    url: 'deleteagrodealer.php', // Adjust the file name accordingly
+                    data: { id: id },
                     success: function (response) {
                         // Handle the response (e.g., show a success message)
                         Swal.fire({
                             title: 'Deleted!',
-                            text: 'The farmer has been deleted.',
+                            text: 'The agrodealer has been deleted.',
                             icon: 'success'
                         });
                         //reloadFarmerTable();
                         // Optionally, you can also remove the row from the HTML table
-                        $(`#row_${idNumber}`).remove();
+                        $(`#row_${id}`).remove();
                     },
                     error: function (xhr, status, error) {
                         // Handle errors

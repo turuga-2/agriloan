@@ -36,6 +36,30 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['loantotal'])) {
         $_SESSION['loanid'] = $loanid; 
     } catch (Exception $e) {
         echo "Error: " . $e->getMessage();
+    }try {
+        // Check if the idNumber exists in the table
+        $checkIdStmt = $conn->prepare("SELECT F_idNumber FROM loans WHERE F_idNumber = ?");
+        $checkIdStmt->bind_param("s", $idNumber);
+        
+        if ($checkIdStmt->execute()) {
+            $checkIdStmt->store_result();
+    
+            // If the idNumber exists, update the credit history to 1
+            if ($checkIdStmt->num_rows > 0) {
+                $updateCreditStmt = $conn->prepare("UPDATE loans SET Credithistory = 1 WHERE F_idNumber = ?");
+                $updateCreditStmt->bind_param("s", $idNumber);
+    
+                if ($updateCreditStmt->execute()) {
+                    echo "Credit history updated successfully.";
+                } else {
+                    throw new Exception("Error updating credit history: " . $updateCreditStmt->error);
+                }
+            }
+        } else {
+            throw new Exception("Error executing statement: " . $checkIdStmt->error);
+        }
+    } catch (Exception $e) {
+        echo "Error: " . $e->getMessage();
     }
 
     try {

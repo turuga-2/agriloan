@@ -68,7 +68,7 @@ center{
 
         <a href="farmerlogin.php" class="btn"> I am a Farmer </a>
 
-        <a href="adminlogin.php" class="btn"> I am an Admin </a>
+        <a href="adminlogin.php" class="btn"> Staff Member </a>
 
  
 </div>
