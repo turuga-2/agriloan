@@ -81,6 +81,14 @@ body p {
     background: #555;
 }
 </style>
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@10/dist/sweetalert2.min.css">
+
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+
+        <!-- //<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"> -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
 <script>
     function restrictInputToNumbers(inputElement) {
@@ -140,24 +148,40 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $idNumber = $_POST["idNumber"];
     $password = $_POST["password"];
 
-    // Query to check if the provided credentials are valid
-    $sql = "SELECT * FROM farmers WHERE idNumber = '$idNumber' AND password = '$password'";
-    $result = $conn->query($sql);
+    // Query to check if the provided ID number exists in the database
+    $checkIdNumberQuery = "SELECT * FROM farmers WHERE idNumber = '$idNumber'";
+    $checkIdNumberResult = $conn->query($checkIdNumberQuery);
 
-    if ($result->num_rows > 0) {
+    if ($checkIdNumberResult->num_rows > 0) {
+        // The ID number exists, now check if the password matches
+        $checkPasswordQuery = "SELECT * FROM farmers WHERE idNumber = '$idNumber' AND password = '$password'";
+        $checkPasswordResult = $conn->query($checkPasswordQuery);
 
-        $row = mysqli_fetch_assoc($result); 
-        $_SESSION['idNumber'] = $row['idNumber'];
-    
-        // Redirect to the success page
-        header("Location: home.php");
-        exit();
+        if ($checkPasswordResult->num_rows > 0) {
+            // Both ID number and password are correct
+            $row = mysqli_fetch_assoc($checkPasswordResult);
+            $_SESSION['idNumber'] = $row['idNumber'];
+            echo "<script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Login Successful!',
+                showConfirmButton: false,
+                timer: 1500
+            }).then(() => {
+                window.location.href = 'home.php'; // Redirect to home.php after the alert
+            });
+          </script>";
+            //header("Location: home.php");
+            exit();
+        } else {
+            // ID number is correct, but the password is wrong
+            echo '<script>alert("Wrong password!");</script>';
+        }
     } else {
-        $message[]= 'Incorrect email or password!';
-        
+        // ID number is not found in the database
+        echo '<script>alert("Invalid login details!");</script>';
     }
 }
-
 ?>
 
 

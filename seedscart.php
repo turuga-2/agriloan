@@ -415,9 +415,6 @@ $agrochemicals = fetchProducts($agrochemicalsResult);
             cartDropdown.style.display = cartDropdown.style.display === 'block' ? 'none' : 'block';
         }
 
-        function calculateinterest() {
-            // Your calculation logic for interest
-        }
     </script>
     
 </body>

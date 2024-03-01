@@ -1,528 +1,354 @@
-<?php include "config/databaseconfig.php";
+<?php
+include "config/databaseconfig.php";
 session_start();
-$idNumber = $_SESSION['idNumber'];
-// Retrieve the cart total from the session
 
+$validationErrors = [];
+$enteredValues = [];
+
+// Function to sanitize input
+function sanitizeInput($data) {
+    global $conn;
+    return mysqli_real_escape_string($conn, htmlspecialchars(trim($data)));
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    // Sanitize input data
+    $enteredValues['idNumber'] = sanitizeInput($_POST['idNumber']);
+    $enteredValues['fname'] = sanitizeInput($_POST['firstname']);
+    $enteredValues['lname'] = sanitizeInput($_POST['lastname']);
+    $enteredValues['phoneNumber'] = sanitizeInput($_POST['phone']);
+    $enteredValues['email'] = sanitizeInput($_POST['email']);
+    $enteredValues['county'] = sanitizeInput($_POST['county']);
+    $enteredValues['gender'] = isset($_POST['gender']) ? sanitizeInput($_POST['gender']) : null;
+    $enteredValues['maritalstatus'] = isset($_POST['maritalStatus']) ? sanitizeInput($_POST['maritalStatus']) : null;
+    $enteredValues['dependents'] = sanitizeInput($_POST['dependents']);
+    $enteredValues['educationlevel'] = isset($_POST['educationlevel']) ? sanitizeInput($_POST['educationlevel']) : null;
+    $enteredValues['employment'] = isset($_POST['employment']) ? sanitizeInput($_POST['employment']) : null;
+    $enteredValues['income'] = sanitizeInput($_POST['income']);
+    $enteredValues['password'] = sanitizeInput($_POST['password']);
+    $enteredValues['confirmpassword'] = sanitizeInput($_POST['confirmpassword']);
+
+    // Validate National ID (8 digits only)
+    if (!preg_match('/^\d{8}$/', $enteredValues['idNumber'])) {
+        $validationErrors[] = 'National ID must be 8 digits.';
+    }
+
+    // Validate First Name and Last Name (only letters)
+    if (!preg_match('/^[A-Za-z]+$/', $enteredValues['fname']) || !preg_match('/^[A-Za-z]+$/', $enteredValues['lname'])) {
+        $validationErrors[] = 'Name should contain only letters.';
+    }
+
+    // Validate Phone Number (starts with 254 and followed by 9 digits)
+    if (!preg_match('/^254\d{9}$/', $enteredValues['phoneNumber'])) {
+        $validationErrors[] = 'Phone number must start with 254 and be 12 digits.';
+    }
+
+    // Validate Email
+    if (!filter_var($enteredValues['email'], FILTER_VALIDATE_EMAIL)) {
+        $validationErrors[] = 'Invalid email address.';
+    }
+
+    // Validate Password
+    if (strlen($enteredValues['password']) < 8 || !preg_match('/[a-zA-Z]/', $enteredValues['password']) || !preg_match('/\d/', $enteredValues['password']) || !preg_match('/[~`!@#$%\^&*+=\-\[\]\\\';,\/{}|\\":<>\?]/', $enteredValues['password'])) {
+        $validationErrors[] = 'Password should be at least 8 characters and include letters, symbols, and numbers.';
+    }
+
+    // Validate Confirm Password
+    if ($enteredValues['password'] !== $enteredValues['confirmpassword']) {
+        $validationErrors[] = 'Passwords do not match.';
+    }
+
+    // If there are validation errors, display them
+    if (!empty($validationErrors)) {
+        // Store entered values in $_SESSION
+        $_SESSION['enteredValues'] = $enteredValues;
+    } else {
+        // No validation errors, proceed with the form processing
+
+        // Hash the password
+        $hashedPassword = password_hash($enteredValues['password'], PASSWORD_DEFAULT);
+
+        // Insert data into the database
+        $sql = "INSERT INTO `farmers` (`idNumber`, `fname`, `lname`, `phoneNumber`, `email`, `county`, `gender`, `maritalstatus`, `dependents`, `educationlevel`, `employment`, `income`, `password`) 
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param(
+            'sssssssssssss',
+            $enteredValues['idNumber'],
+            $enteredValues['fname'],
+            $enteredValues['lname'],
+            $enteredValues['phoneNumber'],
+            $enteredValues['email'],
+            $enteredValues['county'],
+            $enteredValues['gender'],
+            $enteredValues['maritalstatus'],
+            $enteredValues['dependents'],
+            $enteredValues['educationlevel'],
+            $enteredValues['employment'],
+            $enteredValues['income'],
+            $hashedPassword
+        );
+
+        if ($stmt->execute()) {
+            // Success
+            echo "<script src='https://cdn.jsdelivr.net/npm/sweetalert2@11'></script>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Account Created Successfully!',
+                        showConfirmButton: false,
+                        timer: 2000
+                    }).then((result) => {
+                        window.location.href = 'farmerlogin.php';
+                    });
+                });
+            </script>";
+
+    exit();
+        } else {
+            echo "Error inserting data into the database.";
+        }
+    }
+}
+
+// Clear entered values from $_SESSION after processing
+unset($_SESSION['enteredValues']);
+
+$conn->close();
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Loan Application</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 0;
-      background-position: center;
-      background-size: cover;
-    }
-
-    header {
-      background-color: #287247; /* Green header color */
-      padding: 15px;
-      text-align: center;
-    }
-    .date-time {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        font-size: 17px;
-    }
-    .navbar {
-    background-color: rgb(71, 160, 118);
-    overflow: hidden;
-    }
- /* Style the navigation bar links */
-    .navbar a {
-        float: left;
-        display: block;
-        color: #f2f2f2;
-        text-align: center;
-        padding: 14px 16px;
-        text-decoration: none;
-        margin-left: 20px;
-        margin-right: 20px;
-    }
-    /* Change the color of links on hover */
-    .navbar a:hover {
-        background-color: #ddd;
-        color: black;
-    }
-    .navbar a:active,
-        .navbar a.active {
-            background-color: #2c5e3f;
-            color: black;
-        }
-    .container{
-      width: 600px;
-      height: 640px;
-      margin: 5% auto;
-      background-color: #6d947cd2;
-      border-radius: 5px;
-      position: relative;
-    }
-    .container form{
-      width: 80%;
-      height: max-content;
-      margin: 0 auto;
-      position: relative;
-      top: 30px;
-      left: 20px;
-      bottom: 30px;
-    }
-    
-    form label {
-      display: block;
-      margin-bottom: 5px; /* Add spacing between labels and text areas */
-      font-weight: bold;
-    }
-
-    form .text-area {
-      height: auto;
-      display: block;
-      padding: 10px;
-      margin-bottom: 15px; /* Add spacing between text areas */
-      border: 1px solid #999;
-      border-radius: 3px;
-      background-color: #999;
-    }
-    input::placeholder {
-            color: black; /* Change this to the desired color code */
-        }
-    label {
-      font-weight: bold;
-    }
-    input, select {
-      width: 100%;
-      padding: 10px;
-      box-sizing: border-box;
-
-    }
-    .financialdetails{
-      width: 600px;
-      height: 500px;
-      margin: auto;
-      background-color: #6d947cd2;
-      border-radius: 5px;
-      position: relative;
-      top: 10px; 
-      bottom: 60px;
-      
-    }
-    .financialdetails .btn{
-          width: 50%;
-          align-items: center;
-          margin-left: 20%;
-          padding: 10px;
-          background-color: #333;
-          color: #fff;
-          border: none;
-          border-radius: 5px;
-          cursor: pointer;
-    } 
-    .farmdetails {
-      display: block;
-      justify-content: center;
-      width: 55%;
-      height: max-content;
-      max-width: 1200px; /* Adjust the max-width based on your design */
-      margin: 2% auto;
-      background-color: rgba(109, 148, 124, 0.8);
-      border-radius: 5px;
-      position: relative;
-      top: 10px;
-      padding: 30px; /* Added padding for spacing */
-      box-sizing: border-box;
-            
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>Sign Up</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0e301d6c;
         }
 
-        .loanbundles{
-          display: flex;
+        .container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
         }
 
-        .maizebundle,
-        .beansbundle {
-            width: 35%;
-            background-color: #c4e0cf;
-            height: 15%;
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #4caf50;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            display: inline-block;
+            margin-bottom: 8px;
+            color: #4caf50;
+        }
+
+        input[type="text"],
+        input[type="tel"],
+        input[type="email"],
+        input[type="password"],
+        input[type="checkbox"] {
+            margin-bottom: 25px;
+            padding: 5px;
+            border: 1px solid #4caf50;
+            border-radius: 3px;
+        }
+
+        input[type="submit"] {
+            width: 60%;
+            align-items: center;
+            margin-left: 20%;
             padding: 10px;
-            box-sizing: border-box;
-            border-radius: 10px;
-            box-shadow: #333;
-            transition: box-shadow 0.3s; /* Added transition for a smoother effect */
-            margin-left: 20px;
-            margin-right: 25px;
-        }
-
-        .maizebundle button,
-        .beansbundle button {
-            width: 80px;
-            padding: 8px;
-            background-color: #579670;
+            background: linear-gradient(to right, #4caf50, black);
             color: #fff;
             border: none;
             border-radius: 5px;
             cursor: pointer;
+        }
+
+        .container.btn {
+            width: 100%;
+            padding: 10px;
+        }
+
+        .container .dropdown {
+            width: 100%;
+            padding: 5px;
+            margin-bottom: 20px;
+        }
+
+        #rbtn {
+            display: flexbox;
+            margin-bottom: 20px;
             margin-top: 10px;
         }
 
-        .maizebundle.selected,
-        .beansbundle.selected {
-            box-shadow: 0 0 10px #f39c12;
+        .error {
+            color: red;
+            font-size: 14px;
         }
-    .acres{
-    width: 40%;
-    background-color: #9fa8a0;
-    border-radius: 5px; 
-    color: black;
-    } 
-    /* Style the select buttons */
-    .maizebundle li{
-        height: 30%;
-          padding: 8px;
-          border-bottom: 1px solid black;
-          font-size: 14px;
-    }
-    .maizebundle img {
-            max-width: 70px;
-            height: 20%;
-            margin-bottom: 10px;
-            border-radius: 4px;
-    }
-    
-    .beansbundle li{
-      height: 40%;
-          padding: 4px;
-          border-bottom: 1px solid black;
-          font-size: 14px;
-    }
-    .beansbundle img {
-            max-width: 70px;
-            height: 20%;
-            margin-bottom: 10px;
-            border-radius: 4px;
-    }
-    #cart{
-      
-      max-width: max-content;
-      height: fit-content;
-    }
-    
-  </style>
-  <style>
-    .progress-bar {
-      display: flex;
-      justify-content: space-between;
-      padding: 15px;
-      background-color: #333;
-      color: #fff;
-      font-weight: bold;
-    }
-    .progress-step {
-      flex: 1;
-      text-align: center;
-    }
-    .progress-step.active {
-      color: #f39c12; /* Active step color */
-    }
-    .form-container {
-      display: none;
-    }
-  </style>
- <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
- <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+    </style>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
+
+    <script>
+        // Function to validate password
+        function validatePassword(password) {
+            // Validate length
+            if (password.length < 8) {
+                return false;
+            }
+
+            // Regex to check for letter, number, and symbol
+            var hasLetter = /[a-zA-Z]/.test(password);
+            var hasNumber = /\d/.test(password);
+            var hasSymbol = /[~`!@#$%\^&*+=\-\[\]\\';,/{}|\\":<>\?]/.test(password);
+
+            // Return validation result
+            return hasLetter && hasNumber && hasSymbol;
+        }
+    </script>
 </head>
 <body>
+    <div class="container">
+        <h1>Sign up process</h1>
+        <p>Please enter your details to Sign-up</p>
 
-  <header>
-    <h1>Loan Application</h1>
-  </header>
-  <div class="date-time">
-            <?php
-                echo"Today's date:",date("d-m-y, h:m:s")
-            ?>
+        <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"])?>" method="post" autocomplete="on" id="accountForm">
+
+            <!-- IDNumber Input -->
+            <label for="idNumber">IDNumber</label>
+            <input type="text" id="idNumber" name="idNumber" placeholder="IDNumber" oninput="restrictInputToNumbers(this);" value="<?php echo isset($enteredValues['idNumber']) ? htmlspecialchars($enteredValues['idNumber']) : ''; ?>" required>
+            <?php if(in_array('National ID must be 8 digits.', $validationErrors)): ?>
+                <span class="error"><?php echo 'National ID must be 8 digits.'; ?></span>
+            <?php endif; ?>
+
+            <!-- FirstName Input -->
+            <label for="firstname">First Name:</label>
+            <input type="text" id="firstname" name="firstname" placeholder="FirstName" value="<?php echo isset($enteredValues['fname']) ? htmlspecialchars($enteredValues['fname']) : ''; ?>" required>
+            <?php if(in_array('Name should contain only letters.', $validationErrors)): ?>
+                <span class="error"><?php echo 'Name should contain only letters.'; ?></span>
+            <?php endif; ?>
+
+                        <!-- LastName Input -->
+            <label for="lastname">Last Name:</label>
+            <input type="text" id="lastname" name="lastname" placeholder="lastName" value="<?php echo isset($enteredValues['lname']) ? htmlspecialchars($enteredValues['lname']) : ''; ?>" required>
+            <?php if(in_array('Name should contain only letters.', $validationErrors)): ?>
+                <span class="error"><?php echo 'Name should contain only letters.'; ?></span>
+            <?php endif; ?>
+
+            <!-- PhoneNumber Input -->
+            <p>This number will be used in payment use mode: e.g., 254712345678</p>
+            <label for="phone">Phone Number: </label>
+            <input type="tel" id="phone" name="phone" placeholder="PhoneNumber" oninput="phoneNumbers(this)" value="<?php echo isset($enteredValues['phoneNumber']) ? htmlspecialchars($enteredValues['phoneNumber']) : ''; ?>" required>
+            <?php if(in_array('Phone number must start with 254 and be 12 digits.', $validationErrors)): ?>
+                <span class="error"><?php echo 'Phone number must start with 254 and be 12 digits.'; ?></span>
+            <?php endif; ?>
+
+            <!-- Email Input -->
+            <label for="email">Email Address:</label>
+            <input type="email" id="email" name="email" placeholder="Email" value="<?php echo isset($enteredValues['email']) ? htmlspecialchars($enteredValues['email']) : ''; ?>" required>
+            <?php if(in_array('Invalid email address.', $validationErrors)): ?>
+                <span class="error"><?php echo 'Invalid email address.'; ?></span>
+            <?php endif; ?>
+
+            <!-- County Input -->
+            <label for="county">County:</label>
+            <select id="county" name="county" required class="dropdown">
+                <option value="UasinGishu" <?php echo (isset($enteredValues['county']) && $enteredValues['county'] === 'UasinGishu') ? 'selected' : ''; ?>>UasinGishu</option>
+                <option value="TransNzoia" <?php echo (isset($enteredValues['county']) && $enteredValues['county'] === 'TransNzoia') ? 'selected' : ''; ?>>TransNzoia</option>
+                <!-- Add more county options as needed -->
+            </select>
+
+            <!-- Gender Input -->
+            <label for="gender">Gender:</label>
+            <select id="gender" name="gender" required>
+                <option value="male" <?php echo (isset($enteredValues['gender']) && $enteredValues['gender'] === 'male') ? 'selected' : ''; ?>>Male</option>
+                <option value="female" <?php echo (isset($enteredValues['gender']) && $enteredValues['gender'] === 'female') ? 'selected' : ''; ?>>Female</option>
+            </select>
+
+            <!-- Marital Status Input -->
+            <label for="maritalStatus">Marital Status:</label>
+            <select id="maritalStatus" name="maritalStatus" required>
+                <option value="single" <?php echo (isset($enteredValues['maritalstatus']) && $enteredValues['maritalstatus'] === 'single') ? 'selected' : ''; ?>>Single</option>
+                <option value="married" <?php echo (isset($enteredValues['maritalstatus']) && $enteredValues['maritalstatus'] === 'married') ? 'selected' : ''; ?>>Married</option>
+            </select>
+
+            <!-- Dependents Input -->
+            <label>Number of dependents: </label>
+            <input type="number" id="dependents" name="dependents" step="1" min="0" max="30" placeholder="0" value="<?php echo isset($enteredValues['dependents']) ? htmlspecialchars($enteredValues['dependents']) : ''; ?>" required>
+            <?php if(in_array('Invalid number of dependents.', $validationErrors)): ?>
+                <span class="error"><?php echo 'Invalid number of dependents.'; ?></span>
+            <?php endif; ?>
+
+            <!-- Education Level Input -->
+            <label for="educationlevel">Education Level:</label>
+            <select id="educationlevel" name="educationlevel" required>
+                <option value="graduate" <?php echo (isset($enteredValues['educationlevel']) && $enteredValues['educationlevel'] === 'graduate') ? 'selected' : ''; ?>>graduate</option>
+                <option value="notgraduate" <?php echo (isset($enteredValues['educationlevel']) && $enteredValues['educationlevel'] === 'notgraduate') ? 'selected' : ''; ?>>notgraduate</option>
+            </select>
+
+            <!-- Employment Input -->
+            <label for="employment">Employment:</label>
+            <select id="employment" name="employment" required>
+                <option value="self-employed" <?php echo (isset($enteredValues['employment']) && $enteredValues['employment'] === 'self-employed') ? 'selected' : ''; ?>>self-employed</option>
+                <option value="employed" <?php echo (isset($enteredValues['employment']) && $enteredValues['employment'] === 'employed') ? 'selected' : ''; ?>>employed</option>
+            </select>
+
+            <!-- Income Input -->
+            <label>Monthly Income: </label>
+            <input type="number" id="income" name="income" min="0" placeholder="0" value="<?php echo isset($enteredValues['income']) ? htmlspecialchars($enteredValues['income']) : ''; ?>" required>
+            <?php if(in_array('Invalid monthly income.', $validationErrors)): ?>
+                <span class="error"><?php echo 'Invalid monthly income.'; ?></span>
+            <?php endif; ?>
+
+            <!-- Password Input -->
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" placeholder="Password" required>
+            <?php if(in_array('Password should be at least 8 characters and include letters, symbols, and numbers.', $validationErrors)): ?>
+                <span class="error"><?php echo 'Password should be at least 8 characters and include letters, symbols, and numbers.'; ?></span>
+            <?php endif; ?>
+
+            <!-- ConfirmPassword Input -->
+            <label for="confirmpassword">Confirm Password</label>
+            <input type="password" id="confirmpassword" name="confirmpassword" placeholder="Confirm Password" required>
+            <?php if(in_array('Passwords do not match.', $validationErrors)): ?>
+                <span class="error"><?php echo 'Passwords do not match.'; ?></span>
+            <?php endif; ?>
+            <!-- Submit Button -->
+            <input type="submit" value="Submit" name="submit" class="btn">
+        </form>
     </div>
 
-  <div class="navbar">
-        <a href="home.php"> Home </a>   
-        <a href="profile.php"> My profile</a>
-        <a href="loanapplication.php"class="active">Loan Application</a>
-        <a href="loanrepayment.php">Loan Repayment</a>
-        <a href="logout.php">Logout </a>
-  </div>
-
-  <button onclick="startApplication()">Start Application Process</button>
-
-      <div id="farmDetails" class="form-container">
-      <div class="farmdetails">
-      <h2>Loan details</h2>
-        
-            <h4>Please enter your acreage </h4>
-            <p><i>This will calculate the right quantity to be included in your bundle</i></p>
-
-            <label for="acres">Select Acres (1 to 10):</label>
-            <input type="number" id="acres" name="acres" step="0.5" min="0.5" max="10"  class="acres" placeholder="0" required>
-            <h4>Please select the loan bundle to apply for </h4>
-            
-
-          <div class="loanbundles">
-            <div class="maizebundle">
-            Maize bundle
-              <ol>
-                <li class="maizebundleproducts">
-                <img src="seeds\KENYASEEDH516.png" alt="KENYASEEDH516">
-                KenyaseedH516 2kg - ksh420
-                </li>
-
-                <li class="maizebundleproducts">
-                <img src="fertiliser\CAN.jpeg" alt="CAN">
-                CAN 25kg - ksh2151
-                </li>
-
-                <li class="maizebundleproducts">
-                <img src="fertiliser\DAPplanting.png" alt="DAP">
-                DAP 25 kg -ksh2975
-                </li>
-                Total price = 
-              </ol>
-              <button class="select-btn" onclick="selectBundle('maizebundle')">Select</button>
-            </div>
-
-            <div class="beansbundle" data-price="5824">
-              Beans Bundle
-              <ol>
-                <li class="beansbundleproducts">
-                <img src="seeds\WairimuBeanSeed.png" alt="WairimuBeanSeed">
-                Wairimu Bean Seeds 2kg - ksh698
-              </li>
-              <li class="beansbundleproducts">
-                <img src="fertiliser\CAN.jpeg" alt="CAN">
-                CAN 25kg - ksh2151
-              </li>
-              <li class="beansbundleproducts">
-                <img src="fertiliser\DAPplanting.png" alt="DAP">
-                DAP 25kg -ksh 2975
-              </li> 
-            
-              </ol>
-              Total price = ksh 5824
-              <button class="select-btn" onclick="selectBundle('beansbundle')">Select</button>
-              
-            </div>
-            </div>
-       <h3>To add more items to your loan please click here</h3>
-       <button class="opencart" onclick="loadCart('seedscart.php')">Open Cart</button>
-
-       <div id="cart">
-
-       </div>
-
-       <div class="total">
-
-       </div>
-
-      
-       <button type="submit" onclick="loantotal()">Submit Application</button>    
-            
-    </div>
-      
-    </div>
-    
-    
     <script>
-         function startApplication() {
-      // Show the farmDetails div
-      document.getElementById('farmDetails').style.display = 'block';
-    }
-    var acresInput = document.getElementById('acres');
-    // Variable to store the entered value
-    let enteredValue = 0;
+        function restrictInputToNumbers(inputField) {
+            // Remove non-numeric characters using a regular expression
+            inputField.value = inputField.value.replace(/[^0-9]/g, '');
 
-    // Add an event listener to capture the value when it changes
-    acresInput.addEventListener('input', function() {
-        enteredValue = parseFloat(acresInput.value) || 0; // Convert to a float or default to 0 if not a valid number
-        console.log('Entered Value:', enteredValue);
-    });
-    
-
-    var bundlePrice = 0;
-     // Echo the PHP variable into a JavaScript variable
-     
-
-     // Use the value of acres as the multiplier
-     const multiplier = parseFloat(acresInput.value) || 1; // Default to 1 if the input is not a valid number
-
-
-    function updateBundlePrice() {
-
-      // Get the input element reference
-      const acresInput = document.getElementById('acres');
-
-        // Reset bundle price
-        bundlePrice = 0;
-
-        // Check if the maize bundle is selected
-        const maizeBundle = document.querySelector('.maizebundle');
-        if (maizeBundle.classList.contains('selected')) {
-            bundlePrice += calculateBundleTotal('.maizebundleproducts');
+            // Optionally, you can trim the input to only keep the first 8 characters
+            inputField.value = inputField.value.slice(0, 8);
         }
 
-        // Check if the beans bundle is selected
-        const beansBundle = document.querySelector('.beansbundle');
-        if (beansBundle.classList.contains('selected')) {
-            bundlePrice += calculateBundleTotal('.beansbundleproducts');
+        function phoneNumbers(inputField) {
+            // Remove non-numeric characters using a regular expression
+            inputField.value = inputField.value.replace(/[^0-9]/g, '');
+
+            // Optionally, you can trim the input to only keep the first 12 characters
+            inputField.value = inputField.value.slice(0, 12);
         }
-
-        console.log('Bundle Price:', bundlePrice);
-
-        $.ajax({
-        url: 'setorders.php', // Replace with the actual server-side script
-        method: 'POST',
-        data: { bundlePrice: bundlePrice},
-        success: function(response) {
-            console.log('bundlePrice saved to session successfully.');
-        },
-        error: function() {
-            console.error('Error saving bundlePrice to session.');
-        }
-    });
-
-          // Make an AJAX request to set_totals.php to store the total price in the session
-
-    return bundlePrice;
-}
-    function calculateBundleTotal(productClass) {
-        // Calculate the total price for the selected bundle
-        const products = document.querySelectorAll(productClass);
-        let bundleTotal = 0;
-
-        products.forEach(product => {
-            const priceMatch = product.textContent.match(/ksh\s*(\d+)/i);
-            if (priceMatch && priceMatch[1]) {
-                const price = parseFloat(priceMatch[1], 10);
-                bundleTotal += price; 
-            
-            }
-        });
-        
-            bundleTotal= bundleTotal*enteredValue;
-            
-        return bundleTotal;
-        
-    }
-    function selectBundle(bundle) {
-    event.preventDefault();
-    const selectedBundle = document.querySelector(`.${bundle}`);
-    const otherBundle = bundle === 'maizebundle' ? document.querySelector('.beansbundle') : document.querySelector('.maizebundle');
-
-    if (!selectedBundle.classList.contains('selected')) {
-        // If the selected bundle is not already selected, deselect the other bundle
-        otherBundle.classList.remove('selected');
-    }
-
-    // Toggle the selected state for the clicked bundle
-    selectedBundle.classList.toggle('selected');
-
-    // Update the total price based on the selected bundle
-    const bundlePrice = updateBundlePrice();
-
-    
-    }
-
-    function loadCart(pageUrl) {
-        $.ajax({
-            url: pageUrl,
-            type: 'GET',
-            dataType: 'html',
-            success: function (data) {
-                // Replace the content of the div with the loaded content
-                $('#cart').html(data);
-            },
-            error: function () {
-                console.error('Error loading page.');
-            }
-        });
-    }
-
-    function loantotal() {
-      var bundlePrice = updateBundlePrice(); 
-      bundlePrice = parseFloat(bundlePrice.toFixed(2));
-
-       // PHP session variable cartTotal is echoed as a JavaScript variable
-      <?php
-      $cartTotal = isset($_SESSION['cartTotal']) ? $_SESSION['cartTotal'] : 0;
-      echo "var cartTotal = $cartTotal;";
-      ?>
-      console.log('sessioncartTotal : ' + cartTotal); 
-   
-    
-    // Calculate loan total
-    var loantotal = bundlePrice + parseFloat(cartTotal);
-
-    // Calculate interest (6.5% of the loan total)
-    const interestRate = 0.065;
-    const interest = loantotal * interestRate;
-
-    // Calculate grand total and round to two decimal places
-    var grandtotal = (loantotal + interest).toFixed(2);
-
-    // Log the results to the console and display with two decimal places
-    console.log('loantotal: ' + loantotal.toFixed(2));
-    console.log('interest: ' + interest.toFixed(2)); 
-    console.log('grandtotal: ' + grandtotal);
-    
-    $.ajax({
-        url: 'processloan.php',
-        method: 'POST',
-        data: {
-          enteredValue: enteredValue,
-          bundlePrice: bundlePrice,
-          loantotal: loantotal,
-          interest: interest,
-          grandtotal: grandtotal
-        },
-        success: function(response) {
-            console.log(response);
-            console.log('loan processed  successfully.');
-        },
-        error: function() {
-            console.error('Error processing loan.');
-        
-        }
-    });
-
-    
-        
-        
-        //   Swal.fire({
-        //     title: 'Loan application submitted successfully!',
-        //     html: `<p>Your loan status is Pending</p>
-        //     <p>Total Loan Amount : ksh ${loantotal.toFixed(2)}</p>
-        //            <p>Successfully Added Items:</p>
-        //            <ol style="text-align: left;">${cartItems.map(item => `<li>${item}</li>`).join('')}</ol>
-        //            `,
-        //     icon: 'success',
-        //     customClass: {
-        //         popup: 'custom-popup-class', 
-        //         icon: 'custom-icon-class'
-        //     },
-        //     width: '400px', // Adjust the width as needed
-        // });
-
-
-       
-
-
-       // return loantotal;
-
-}
-</script>
-       
-
+    </script>
 </body>
 </html>
-
-    
-    

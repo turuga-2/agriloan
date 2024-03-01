@@ -82,12 +82,6 @@ body p {
 </style>
 </head>
 <body>
-<div class="date-time">
-
-<?php
-    echo"Today's date:",date("i-m-y, h:i:s")
-
-?>
 
 </div>
     <center>
@@ -117,29 +111,39 @@ body p {
     
 </div>
 
+
 <?php
 // Process login form data
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $idNumber = $_POST["idNumber"];
     $password = $_POST["password"];
 
-     // Query to check if the provided credentials are valid
-     $sql = "SELECT * FROM admin WHERE idNumber = '$idNumber' AND password = '$password'";
-     $result = $conn->query($sql);
+    // Query to check if the provided ID number exists in the database
+    $checkIdNumberQuery = "SELECT * FROM admin WHERE idNumber = '$idNumber'";
+    $checkIdNumberResult = $conn->query($checkIdNumberQuery);
 
-     if ($result->num_rows > 0) {
-        // Redirect to the success page
-        header("Location: adminhome.php");
-        exit();
+    if ($checkIdNumberResult->num_rows > 0) {
+        // The ID number exists, now check if the password matches
+        $checkPasswordQuery = "SELECT * FROM admin WHERE idNumber = '$idNumber' AND password = '$password'";
+        $checkPasswordResult = $conn->query($checkPasswordQuery);
+
+        if ($checkPasswordResult->num_rows > 0) {
+            // Both ID number and password are correct
+            $row = mysqli_fetch_assoc($checkPasswordResult);
+            $_SESSION['idNumber'] = $row['idNumber'];
+            
+            header("Location: adminhome.php");
+            exit();
+        } else {
+            // ID number is correct, but the password is wrong
+            echo '<script>alert("Wrong password!");</script>';
+        }
     } else {
-        echo "Invalid username or password";
+        // ID number is not found in the database
+        echo '<script>alert("Invalid login details!");</script>';
     }
-
- 
 }
-
 ?>
-
 <script>
     function restrictInputToNumbers(inputField) {
         // Remove non-numeric characters using a regular expression

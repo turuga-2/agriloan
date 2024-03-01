@@ -1,5 +1,10 @@
 <?php include "config/databaseconfig.php";
-session_start();
+// Check if idNumber is not set in the session
+if (!isset($_SESSION['idNumber'])) {
+  // Redirect to the login page
+  header("Location: farmerlogin.php");
+  exit(); // Ensure that no further code is executed after the redirect
+}
 $idNumber = $_SESSION['idNumber'];
 
 
@@ -147,6 +152,8 @@ $idNumber = $_SESSION['idNumber'];
 }
 
   </style>
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
   <script>
     function updateprofile(){
       window.location.href = "updateprofile.php";
@@ -164,6 +171,7 @@ $idNumber = $_SESSION['idNumber'];
       //alert('Profile updated successfully!');
   ;
   </script>
+  
 </head>
 <body>
 
@@ -176,6 +184,7 @@ $idNumber = $_SESSION['idNumber'];
             <a href="home.php"> Home </a>
             <a href="profile.php" class="active"> My profile</a>
             <a href="loanapplication.php">Loan Application</b></a>
+            <a href="bills.php">My bills</b></a>
             <a href="loanrepayment.php">Loan Repayment</a>
             <a href="logout.php">Logout </a>
   </div>

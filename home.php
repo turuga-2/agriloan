@@ -1,6 +1,12 @@
 <?php 
 include "config\databaseconfig.php";
-session_start();
+// Check if idNumber is not set in the session
+if (!isset($_SESSION['idNumber'])) {
+    // Redirect to the login page
+    header("Location: farmerlogin.php");
+    exit(); // Ensure that no further code is executed after the redirect
+}
+
 $idNumber = $_SESSION['idNumber'];
 ?>
 <!DOCTYPE html>
@@ -60,6 +66,8 @@ $idNumber = $_SESSION['idNumber'];
             color: black;
         }
         </style>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
     </head>
     <body>
 
@@ -67,13 +75,14 @@ $idNumber = $_SESSION['idNumber'];
             <h1>Home Page</h1>
     </header>
 
-       
+    
         
         <div class="navbar">
 
             <a href="home.php"class="active"> Home </a>
             <a href="profile.php"> My profile</a>
             <a href="loanapplication.php">Loan Application</b></a>
+            <a href="bills.php">My bills</b></a>
             <a href="loanrepayment.php">Loan Repayment</a>
             <a href="logout.php">Logout </a>
             
@@ -92,48 +101,45 @@ $idNumber = $_SESSION['idNumber'];
             if (mysqli_num_rows($select) > 0) {
                 $fetch = mysqli_fetch_assoc($select);
                 $fname = $fetch['fname'];
+                echo "<h3>Hello <i>".  $fname ."</i> Welcome to Agriloan </h3>";
             }
-        
-            $statussql = "SELECT loanstatus FROM loans WHERE F_idNumber = '$idNumber'";
-            $statusselect = mysqli_query($conn, $statussql);
-        
-            if (!$statusselect) {
-                throw new Exception("Error executing query: " . mysqli_error($conn));
-            }
-        
-            if (mysqli_num_rows($statusselect) > 0) {
-                $fetch = mysqli_fetch_assoc($statusselect);
-                $dbloanstatus = $fetch['loanstatus'];
-            }
-        
-        } catch (Exception $e) {
-            // Handle the exception, you can log or display an error message as needed
-            echo "Error: " . $e->getMessage();
-        } finally {
-            // Close the database connection
-            if ($conn) {
-                mysqli_close($conn);
-            }
-        }
-       
+                // Query to check if the farmer has a loan id
+                $loanCheckQuery = "SELECT loanid, loanstatus FROM farmer_details WHERE idNumber = '$idNumber' ORDER BY loanid DESC LIMIT 1";
+                $loanCheckResult = mysqli_query($conn, $loanCheckQuery);
+            
+                if (!$loanCheckResult) {
+                    throw new Exception("Error executing query: " . mysqli_error($conn));
+                }
+            
+                // Check if the query returned any rows
+                if (mysqli_num_rows($loanCheckResult) > 0) {
+                    // Fetch the loan id
+                    $fetch = mysqli_fetch_assoc($loanCheckResult);
+                    $dbloanid = $fetch['loanid'];
+                    $_SESSION['dbloanid'] = $dbloanid;
+                    $dbloanstatus = $fetch['loanstatus'];
+                    $_SESSION['dbloanstatus'] = $dbloanstatus;
+            
+                    // Continue with your logic or display the loan id
+                    echo "<h4>Your loan status for loan id <i>" . $dbloanid . "</i> is <i>" . $dbloanstatus . "</i></h4>";
+                } else {
+                    // Echo a message if no loan id exists
+                    echo "<h4>You have no loans currently.</h4>";
+                }
        ?>
-
-  
-        
-          <h3>Hello <i><?php echo $fname; ?></i> Welcome to Agriloan </h3>
-
-        
-
-
-          <h4> Your loan status is <?php echo $dbloanstatus; ?>
-          </h4>
-          <p> Here we are to have the news related to their individual farming kama for example if <br>
-            If ni january ni dry season advice watu wadry mahindi
-            kama ni time ya kuplant advice watu wanunue fertiliser 
-            kama ni weeks after planting advice fertiliser ya top dressing ama ya weeding
-
-          </p>
-
-
+          
+       
     </body>
 </html>
+<?php
+} catch (Exception $e) {
+    // Handle the exception, you can log or display an error message as needed
+    echo "Error: " . $e->getMessage();
+} finally {
+    // Close the database connection
+    if ($conn) {
+        mysqli_close($conn);
+    }
+}
+
+?>

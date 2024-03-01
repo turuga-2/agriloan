@@ -1,7 +1,7 @@
-
+<?php 
+include "../config/databaseconfig.php";?>
 <!DOCTYPE html>
 <html>
-    
         <style>
             body {
       font-family: Arial, sans-serif;
@@ -54,18 +54,6 @@
         </style>
     </head>
     <body>
-
-    <header>
-            <h1>Home Page</h1>
-    </header>
-
-          <div class="date-time">
-            <?php
-                echo"Today's date:",date("d-m-y, h:m:s")
-
-            ?>
-
-          </div>
        
         
         <div class="navbar">
@@ -73,7 +61,6 @@
             <a href="home.php"class="active"> Home </a>
             <a href="profile.php"> My profile</a>
             <a href="loanapplication.php">Loan Application</b></a>
-            <a href="loanstatus.php">My loans</a>
             <a href="loanrepayment.php">Loan Repayment</a>
             <a href="logout.php">Logout </a>
             

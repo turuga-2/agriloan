@@ -95,6 +95,12 @@ session_start();?>
             cursor: pointer;
         }
     </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="https://cdn.datatables.net/2.0.1/js/dataTables.min.js"></script>
+   
+
     <script>
         function toggleCard() {
             var card = document.getElementById('card');
@@ -109,6 +115,70 @@ session_start();?>
             card.style.display = (card.style.display === 'none' || card.style.display === '') ? 'block' : 'none';
         }
     </script>
+    <script>
+    function generateReport() {
+        var form = document.getElementById("columnSelectorForm");
+        var selectedColumns = [];
+
+        // Get the selected columns
+        for (var i = 0; i < form.elements.length; i++) {
+            var element = form.elements[i];
+            if (element.type === "checkbox" && element.checked) {
+                selectedColumns.push(element.value);
+            }
+        }
+
+        // Send an AJAX request to the server with the selected columns
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState == 4 && xhr.status == 200) {
+                // Update the card with the new report
+                document.getElementById("modalBody").innerHTML = xhr.responseText;
+                // Show the modal
+                $('#myModal').modal('show');
+            }
+        };
+        xhr.open("POST", "generatefarmersreport.php", true);
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+        xhr.send("columns=" + JSON.stringify(selectedColumns));
+    }
+    // Define closeModal function
+function closeModal(modalId) {
+    var modal = document.getElementById(modalId);
+    modal.style.display = 'none';
+    document.body.classList.remove('modal-open'); // Remove the modal-open class
+    var modalBackdrops = document.getElementsByClassName('modal-backdrop');
+    // Remove any existing modal backdrops
+    while (modalBackdrops[0]) {
+        modalBackdrops[0].parentNode.removeChild(modalBackdrops[0]);
+    }
+}
+    function printCard(cardId, modalId) {
+            // Get the HTML content of the specified card
+    var printContent = document.getElementById(modalId).innerHTML;
+
+// Store the original body content
+var originalContent = document.body.innerHTML;
+
+// Replace the entire body content with the card content
+document.body.innerHTML = printContent;
+
+// Trigger the browser's print dialog
+window.print();
+
+// Restore the original body content after printing
+document.body.innerHTML = originalContent;
+
+// Debugging: Log a message to check if the closeModal function is being called
+console.log("Before closing modal");
+
+// Close the modal after printing (assuming you have a function named closeModal)
+closeModal(modalId);
+
+// Debugging: Log a message after attempting to close the modal
+console.log("After closing modal");
+        }
+</script>
 </head>
 
 <body>
@@ -131,7 +201,7 @@ session_start();?>
 
                 <div id="card">
                     <h2>Farmers Data</h2>
-                    <table>
+                    <table id="farmerdetails-table">
                         <thead>
                             <tr>
                                 <th>ID Number</th>
@@ -180,6 +250,37 @@ session_start();?>
                             ?>
                         </tbody>
                     </table>
+                    
+                    <form id="columnSelectorForm" action="generate_report.php" method="post">
+                        <label>Select Columns:</label><br>
+                        <?php
+                        $columns = ["idNumber", "fname", "lname", "phoneNumber", "email", "county", "gender", "maritalstatus", "dependents", "educationlevel", "employment", "income"];
+                        foreach ($columns as $column) {
+                            echo "<input type='checkbox' name='columns[]' value='$column'>$column<br>";
+                        }
+                        ?>
+                        <br>
+                        <button type="button" onclick="generateReport()">Generate Report</button>
+                    </form>
+                    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="exampleModalLabel">Generated Report</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body" id="modalBody">
+                                    <!-- Report content will be dynamically populated here -->
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                                    <button type="button" class="btn btn-primary" onclick="printCard('modalBody', 'myModal')">Print Report</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
 <!--  -->

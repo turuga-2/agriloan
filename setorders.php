@@ -8,8 +8,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['cartTotal'])) {
     // Store the cartTotal value in the session variable
     $_SESSION['cartTotal'] = $cartTotal;
 
+    
+    
     // Send a response back to the client (optional)
-    echo 'Cart total saved to session successfully.';
+    echo 'Cart total 1 saved to session successfully.';
    echo json_encode(['success' => true, 'cartTotal' => $cartTotal]);
    exit;
 } else {

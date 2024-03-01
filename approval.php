@@ -9,8 +9,9 @@ try {
         $_SESSION['loanid'] = $loanid;
 
         // Use prepared statements to prevent SQL injection
-        $sql = "UPDATE `loans` SET `loanstatus`='Approved' WHERE loanid = ?";
+        $sql = "UPDATE `loans` SET `loanstatus`='Active', `approvaldate` = CURRENT_TIMESTAMP WHERE loanid = ?";
         $stmt = $conn->prepare($sql);
+
 
         if (!$stmt) {
             throw new Exception("Error in preparing the statement: " . $conn->error);

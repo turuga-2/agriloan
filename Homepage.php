@@ -60,6 +60,10 @@ center{
         <p><b><i> Welcome to Agriloan where we make farmers' dreams come true!
         <br>Join us today to get the support you need for a wonderful harvest!
         <br>We provide affordable loans in form of farm inputs and seeds.
+        <br>Our loans are considerate to farmers as you are required to payback after harvsting on the 6th month 
+        <br>and pay the interest in the meantime!
+        <br> Our loan interest rates are 6.5% per month.
+        <br> 
     </i></b></p>
 
     
