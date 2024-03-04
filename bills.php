@@ -27,7 +27,12 @@ try{
     }
     if ($balance <= 0) {
         // Handle the case when the balance is 0
-        echo "Your balance is 0. No further actions are required.";
+        $updateloansql ="UPDATE loans SET loanstatus = 'Cleared' WHERE F_idNumber = '$idNumber' AND loanid = '$dbloanid'";
+        $resultupdateloansql = mysqli_query($conn, $updateloansql);
+        if ($resultupdateloansql){
+            echo "<script>console.log('Your balance is 0. No further actions are required.We have updated the loan status')</script>";
+        }
+        //echo "Your balance is 0. No further actions are required.";
     } else {
         // Continue with the rest of your code
             // Query to select approval date and penalty from the loans table

@@ -115,22 +115,22 @@ body p {
 <?php
 // Process login form data
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $idNumber = $_POST["idNumber"];
+    $idNumberadmin = $_POST["idNumber"];
     $password = $_POST["password"];
 
     // Query to check if the provided ID number exists in the database
-    $checkIdNumberQuery = "SELECT * FROM admin WHERE idNumber = '$idNumber'";
+    $checkIdNumberQuery = "SELECT * FROM admin WHERE idNumber = '$idNumberadmin'";
     $checkIdNumberResult = $conn->query($checkIdNumberQuery);
 
     if ($checkIdNumberResult->num_rows > 0) {
         // The ID number exists, now check if the password matches
-        $checkPasswordQuery = "SELECT * FROM admin WHERE idNumber = '$idNumber' AND password = '$password'";
+        $checkPasswordQuery = "SELECT * FROM admin WHERE idNumber = '$idNumberadmin' AND password = '$password'";
         $checkPasswordResult = $conn->query($checkPasswordQuery);
 
         if ($checkPasswordResult->num_rows > 0) {
             // Both ID number and password are correct
             $row = mysqli_fetch_assoc($checkPasswordResult);
-            $_SESSION['idNumber'] = $row['idNumber'];
+            $_SESSION['idNumberadmin'] = $row['idNumber'];
             
             header("Location: adminhome.php");
             exit();

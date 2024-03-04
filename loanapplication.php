@@ -416,7 +416,7 @@ $agrochemicals = fetchProducts($agrochemicalsResult);
   </div>
   <?php
   // SQL statement to select the loan status
-$loanStatusQuery = "SELECT loanstatus FROM farmer_details WHERE idNumber = '$idNumber'ORDER BY loanid DESC LIMIT 1";
+$loanStatusQuery = "SELECT loanstatus FROM loans WHERE F_idNumber = '$idNumber'ORDER BY loanid DESC LIMIT 1";
 $loanStatusResult = $conn->query($loanStatusQuery);
 
 // Check if there is a matching loan status

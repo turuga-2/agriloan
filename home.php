@@ -90,7 +90,24 @@ $idNumber = $_SESSION['idNumber'];
 
           <?php
 
-           try {        
+           try {       
+    $balancesql = "SELECT balance FROM repayments_view WHERE idNumber = '$idNumber' AND loanid ='$dbloanid'";
+    $balanceresult = mysqli_query($conn, $balancesql);
+
+    if (!$balanceresult) {
+        throw new Exception("Error executing query: " . mysqli_error($conn));
+    }
+    if (mysqli_num_rows($balanceresult) > 0) {
+        $fetch = mysqli_fetch_assoc($balanceresult);
+        $balance = $fetch['balance'];
+    }
+    if ($balance <= 0) {
+        // Handle the case when the balance is 0
+        $updateloansql ="UPDATE loans SET loanstatus = 'Cleared' WHERE F_idNumber = '$idNumber' AND loanid = '$dbloanid'";
+        $resultupdateloansql = mysqli_query($conn, $updateloansql);
+        if ($resultupdateloansql){
+            echo "<script>console.log('Your balance is 0. No further actions are required.We have updated the loan status')</script>";
+        }} 
             $sql = "SELECT fname FROM farmers WHERE idNumber = $idNumber";
             $select = mysqli_query($conn, $sql);
         
@@ -104,7 +121,7 @@ $idNumber = $_SESSION['idNumber'];
                 echo "<h3>Hello <i>".  $fname ."</i> Welcome to Agriloan </h3>";
             }
                 // Query to check if the farmer has a loan id
-                $loanCheckQuery = "SELECT loanid, loanstatus FROM farmer_details WHERE idNumber = '$idNumber' ORDER BY loanid DESC LIMIT 1";
+                $loanCheckQuery = "SELECT loanid, loanstatus, dispatch_status, dispatchdate FROM loans WHERE F_idNumber = '$idNumber' ORDER BY loanid DESC LIMIT 1";
                 $loanCheckResult = mysqli_query($conn, $loanCheckQuery);
             
                 if (!$loanCheckResult) {
@@ -119,9 +136,14 @@ $idNumber = $_SESSION['idNumber'];
                     $_SESSION['dbloanid'] = $dbloanid;
                     $dbloanstatus = $fetch['loanstatus'];
                     $_SESSION['dbloanstatus'] = $dbloanstatus;
+                    $dispatch_status = $fetch['dispatch_status'];
+                    $dispatchdate = $fetch['dispatchdate'];
             
                     // Continue with your logic or display the loan id
                     echo "<h4>Your loan status for loan id <i>" . $dbloanid . "</i> is <i>" . $dbloanstatus . "</i></h4>";
+
+                    echo "<h4>Your Dispatch status is <i>" . $dispatch_status. "</i> It was dispatched on <i>" . $dispatchdate . "</i></h4>";
+
                 } else {
                     // Echo a message if no loan id exists
                     echo "<h4>You have no loans currently.</h4>";

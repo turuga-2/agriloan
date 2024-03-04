@@ -1,6 +1,11 @@
 <?php
 include "config/databaseconfig.php";
 session_start();
+if (!isset($_SESSION['idNumberadmin'])) {
+    // Redirect to the login page
+    header("Location: adminlogin.php");
+    exit(); // Ensure that no further code is executed after the redirect
+}
 ?>
 
 <!DOCTYPE html>
@@ -10,13 +15,17 @@ session_start();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    
     <style>
-        body {
+        /* body {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
             background-color: #f4f4f4;
-        }
+        } */
 
         header {
             background-color: #9da8a2; /* Green header color */
@@ -57,7 +66,7 @@ session_start();
             padding: 20px;
         }
 
-        #overlay {
+        /* #overlay {
             display: none;
             position: fixed;
             top: 0;
@@ -65,9 +74,9 @@ session_start();
             width: 100%;
             height: 100%;
             background-color: rgba(0, 0, 0, 0.7);
-        }
+        } */
 
-        #modal {
+        /* #modal {
             display: none;
             position: fixed;
             top: 50%;
@@ -76,7 +85,7 @@ session_start();
             background-color: white;
             padding: 20px;
             border-radius: 10px;
-        }
+        } */
 
         #agrodealerTable {
             display: none;
@@ -111,7 +120,6 @@ session_start();
             cursor: pointer;
         }
     </style>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
@@ -125,7 +133,8 @@ session_start();
     <div id="sidebar">
         <a href="adminhome.php">Home</a>
         <a href="reports.php">Generate reports</a>
-        <a href="loanapproval.php">Loan Approval</a>
+        <a href="loanapproval.php">Approval Loans</a>
+        <a href="dispatch.php">Dispatch Goods</a>
         <a href="logoutadmin.php">Logout</a>
     </div>
 
@@ -136,7 +145,7 @@ session_start();
     </div>
 
     <div id="content">
-        <button onclick="toggleAgrodealerTable()">Delete agrodealer record</button>
+    <button class="btn btn-primary" onclick="toggleAgrodealerTable()">Delete agrodealer record</button>
         <div id="agrodealerTable">
             <table>
                 <thead>
@@ -184,22 +193,21 @@ session_start();
         </div>
 
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#agrodealerModal">
-        Add agrodealer
+            Add Agrodealer
         </button>
         <!-- Bootstrap Modal for Agrodealer Form -->
         <div class="modal" id="agrodealerModal" tabindex="-1" role="dialog" aria-labelledby="agrodealerModalLabel" aria-hidden="true">
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
-                    <!-- Modal Header -->
                     <div class="modal-header">
                         <h5 class="modal-title" id="agrodealerModalLabel">Add Agrodealer</h5>
+
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
                     <!-- Modal Body -->
                     <div class="modal-body">
-                        <!-- Form to add agrodealer -->
                         <!-- Form to add agrodealer -->
                         <form id="agrodealerForm" action="" method="POST">
 
@@ -225,8 +233,13 @@ session_start();
         </div>
 
     </div>
+        <!-- Bootstrap JS -->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+        <!-- jQuery -->
+        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+        <!-- SweetAlert2 -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script>
         // Perform AJAX request or form submission to delete record
         function toggleAgrodealerTable() {

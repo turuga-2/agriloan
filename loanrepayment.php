@@ -28,6 +28,17 @@ try{
         $interest = $fetch['interest'];
         $grandtotal = $fetch['grandtotal'];
     }
+    // select the balance
+    $balancesql = "SELECT balance FROM repayments_view WHERE idNumber = '$idNumber' AND loanid ='$dbloanid'";
+    $balanceresult = mysqli_query($conn, $balancesql);
+
+    if (!$balanceresult) {
+        throw new Exception("Error executing query: " . mysqli_error($conn));
+    }
+    if (mysqli_num_rows($balanceresult) > 0) {
+        $fetch = mysqli_fetch_assoc($balanceresult);
+        $balance = $fetch['balance'];
+    }
 
 
     if (mysqli_num_rows($result) > 0) {
@@ -164,23 +175,26 @@ try{
                 5th month and on the 6th month you will be required to repay back the full loaned amount</p>
                
                 Your active loan is loanid number <?php echo $dbloanid;?>
-            <p>Your loan amount is <?php echo $grandtotal;?></p>
-            <p>Your interest to be repaid is <?php echo $interest;?></p>
+                <p>Your interest to be repaid is <?php echo $interest;?></p>
+                <p>Your loan amount is <?php echo $grandtotal;?></p>
+                <p>Your balance is <?php echo $balance ;?></p>
+            
           
             <form method="post" id="paymentForm" action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"])?>">
-           <p>This Safaricom number will be used to pay </p>
            <br>
            <p>You will be prompted to make payment</p>
-           
+                <p>This Safaricom number will be used to pay </p>
                 <label for="phoneNumber">Phone Number:</label>
-                <input type="tel" id="phoneNumber" name="phoneNumber" value="<?php echo $fetch['phoneNumber']; ?>" oninput="phoneNumbers(this)" required>
+                <div class="text-area" id="phoneNumber" name="phoneNumber"> <?php echo $fetch['phoneNumber']; ?>  </div>
+
+               
 
                 <p>Please enter the Amount to pay </p>
                 <label for="amount">Amount:</label>
                 <input type="number" id="amount" name="amount" placeholder="amount" oninput="restrictInputToNumbers(this);" required>
                 <input type="submit" value="Make Payment">
            </form>
-           <button onclick="processtransaction()">view my transactions</button>
+           
           </div>
           
           <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
@@ -202,11 +216,12 @@ try{
             event.preventDefault();
 
             // Get form data
-            const phoneNumber = $('#phoneNumber').val();
+            const phoneNumber = $('#phoneNumber').text().trim();
+            //const phoneNumber = $('#phoneNumber').val();
             const amount = $('#amount').val();
             const loanid = <?php echo $dbloanid;?>;
             const idNumber = <?php echo $idNumber?>;
-console.log(loanid,idNumber);
+            console.log(loanid,idNumber);
 
             $.ajax({
                 url: 'daraja/stkpush.php',
@@ -227,14 +242,15 @@ console.log(loanid,idNumber);
                     console.error('Error sending detailsto stkpush');
                 }
             });
-            
+            processtransaction();
     
             
             
         });
     });
     function processtransaction(){
-        const phoneNumber = $('#phoneNumber').val();
+        const phoneNumber = $('#phoneNumber').text().trim();
+        //const phoneNumber = $('#phoneNumber').val();
             const amount = $('#amount').val();
         $.ajax({
                 url: 'transactionprocessing.php',

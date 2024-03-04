@@ -1,5 +1,11 @@
 <?php include "config/databaseconfig.php";
-session_start();?>
+session_start();
+if (!isset($_SESSION['idNumberadmin'])) {
+    // Redirect to the login page
+    header("Location: adminlogin.php");
+    exit(); // Ensure that no further code is executed after the redirect
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -7,6 +13,7 @@ session_start();?>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reports</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -15,9 +22,9 @@ session_start();?>
             background-color: #f4f4f4;
         }
         header {
-            background-color: #9da8a2; /* Green header color */
+            background-color: #9da8a2; 
             padding: 15px;
-            text-align: center;
+            /* text-align: center; */
           }
 
         #sidebar {
@@ -49,11 +56,11 @@ session_start();?>
         #card {
             display: none;
            
-            margin: 30px auto;
+            /* margin: 30px auto;
             padding: 20px;
             background-color: #ffffff;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            border-radius: 5px;
+            border-radius: 5px; */
         }
         #card2 {
             display: none;
@@ -86,22 +93,19 @@ session_start();?>
 
         th, td {
             padding: 12px;
-            text-align: left;
-        }
-
-        button {
-            padding: 10px 15px;
-            font-size: 16px;
-            cursor: pointer;
+            /* text-align: left; */
         }
     </style>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" ></script>
+
     <script src="https://cdn.datatables.net/2.0.1/js/dataTables.min.js"></script>
    
 
-    <script>
+    
+</head>
+<script>
         function toggleCard() {
             var card = document.getElementById('card');
             card.style.display = (card.style.display === 'none' || card.style.display === '') ? 'block' : 'none';
@@ -115,7 +119,7 @@ session_start();?>
             card.style.display = (card.style.display === 'none' || card.style.display === '') ? 'block' : 'none';
         }
     </script>
-    <script>
+     <script>
     function generateReport() {
         var form = document.getElementById("columnSelectorForm");
         var selectedColumns = [];
@@ -135,7 +139,7 @@ session_start();?>
                 // Update the card with the new report
                 document.getElementById("modalBody").innerHTML = xhr.responseText;
                 // Show the modal
-                $('#myModal').modal('show');
+                toggleModal();
             }
         };
         xhr.open("POST", "generatefarmersreport.php", true);
@@ -143,43 +147,66 @@ session_start();?>
         xhr.send("columns=" + JSON.stringify(selectedColumns));
     }
     // Define closeModal function
-function closeModal(modalId) {
-    var modal = document.getElementById(modalId);
-    modal.style.display = 'none';
-    document.body.classList.remove('modal-open'); // Remove the modal-open class
-    var modalBackdrops = document.getElementsByClassName('modal-backdrop');
-    // Remove any existing modal backdrops
-    while (modalBackdrops[0]) {
-        modalBackdrops[0].parentNode.removeChild(modalBackdrops[0]);
+    // Toggle modal using Bootstrap
+    function toggleModal() {
+        $('#myModal').modal('toggle');
     }
-}
+
     function printCard(cardId, modalId) {
-            // Get the HTML content of the specified card
-    var printContent = document.getElementById(modalId).innerHTML;
+    // Get the HTML content of the specified card
+    var printContent = document.getElementById(cardId).innerHTML;
 
-// Store the original body content
-var originalContent = document.body.innerHTML;
+    // Create a new window or iframe
+    var printWindow = window.open('', '_blank');
 
-// Replace the entire body content with the card content
-document.body.innerHTML = printContent;
+    // Populate the new window or iframe with the card content
+    printWindow.document.write('<html><head><title>Print</title></head><body>');
+    printWindow.document.write(printContent);
+    printWindow.document.write('</body></html>');
 
-// Trigger the browser's print dialog
-window.print();
+    // Trigger the print dialog in the new window or iframe
+    printWindow.print();
 
-// Restore the original body content after printing
-document.body.innerHTML = originalContent;
+    // Close the new window or iframe
+    printWindow.close();
+    toggleModal()
 
-// Debugging: Log a message to check if the closeModal function is being called
-console.log("Before closing modal");
+    //location.reload(true); // Pass true to force a reload from the server, bypassing the cache
 
-// Close the modal after printing (assuming you have a function named closeModal)
-closeModal(modalId);
+}
 
-// Debugging: Log a message after attempting to close the modal
-console.log("After closing modal");
-        }
-</script>
-</head>
+    function closeModal() {
+        $('#myModal').modal('hide');
+    }
+
+
+
+    // function printCard(cardId, modalId) {
+    //         // Get the HTML content of the specified card
+    // var printContent = document.getElementById(modalId).innerHTML;
+
+    //     // Store the original body content
+    //     var originalContent = document.body.innerHTML;
+
+    //     // Replace the entire body content with the card content
+    //     document.body.innerHTML = printContent;
+
+    //     // Trigger the browser's print dialog
+    //     window.print();
+
+    //     // Restore the original body content after printing
+    //     document.body.innerHTML = originalContent;
+
+    //     // Debugging: Log a message to check if the closeModal function is being called
+    //     //console.log("Before closing modal");
+
+    //     // Close the modal after printing (assuming you have a function named closeModal)
+    //     toggleModal();
+
+    //     // Debugging: Log a message after attempting to close the modal
+    //     console.log("After closing modal");
+    //             }
+        </script>
 
 <body>
       <header>
@@ -190,14 +217,15 @@ console.log("After closing modal");
     <div id="sidebar">
         <a href="adminhome.php">Home</a>
         <a href="reports.php">Generate reports</a>
-        <a href="loanapproval.php">Loan Approval</a>
+        <a href="loanapproval.php">Approval Loans</a>
+        <a href="dispatch.php">Dispatch Goods</a>
         <a href="logoutadmin.php">Logout</a>
     </div> 
 
     <div id="content">
 
         Reports
-        <button onclick="toggleCard()">Farmer Details </button>
+        <button class="btn btn-secondary" onclick="toggleCard()">Farmer Details </button>
 
                 <div id="card">
                     <h2>Farmers Data</h2>
@@ -262,26 +290,27 @@ console.log("After closing modal");
                         <br>
                         <button type="button" onclick="generateReport()">Generate Report</button>
                     </form>
-                    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                        <div class="modal-dialog" role="document">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="exampleModalLabel">Generated Report</h5>
-                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                        <span aria-hidden="true">&times;</span>
-                                    </button>
-                                </div>
-                                <div class="modal-body" id="modalBody">
-                                    <!-- Report content will be dynamically populated here -->
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                                    <button type="button" class="btn btn-primary" onclick="printCard('modalBody', 'myModal')">Print Report</button>
-                                </div>
-                            </div>
+                </div>
+
+                <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header" style="display: flex; justify-content: space-between;">
+                            <h5 class="modal-title" id="exampleModalLabel">Generated Report</h5>
+                            <button type="button" class="close"  onclick="closeModal()" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body" id="modalBody">
+                            <!-- Report content will be dynamically populated here -->
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="closeModal()" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" onclick="printCard('modalBody', 'myModal')">Print Report</button>
                         </div>
                     </div>
                 </div>
+            </div>
 
 <!--  -->
 
@@ -353,6 +382,8 @@ console.log("After closing modal");
         
     </div>
     
+   
+            
     
 
 </body>
