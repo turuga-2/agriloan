@@ -90,6 +90,7 @@ $idNumber = $_SESSION['idNumber'];
 
           <?php
 
+
            try {       
     $balancesql = "SELECT balance FROM repayments_view WHERE idNumber = '$idNumber' AND loanid ='$dbloanid'";
     $balanceresult = mysqli_query($conn, $balancesql);

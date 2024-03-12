@@ -4,7 +4,7 @@ include "config/databaseconfig.php";
 $selectedColumns = json_decode($_POST['columns']);
 $selectedColumnsString = implode(", ", $selectedColumns);
 
-$sql = "SELECT $selectedColumnsString FROM farmers";
+$sql = "SELECT $selectedColumnsString FROM combined_view";
 $result = mysqli_query($conn, $sql);
 
 if (mysqli_num_rows($result) > 0) {

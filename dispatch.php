@@ -20,6 +20,10 @@ if ($result) {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Dispatch</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+
         <style>
         #sidebar {
             height: 100%;
@@ -43,20 +47,25 @@ if ($result) {
             background-color: #555;
         }
         </style>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
 
+<script>
+$(document).ready(function() {
+    $('table').dataTable();
+
+   // $('#dispatchtable').DataTable();
+}); 
+</script>
+    
+    
 
 </head>
 <body>
 <div id="sidebar">
-        <a href="adminhome.php">Home</a>
-        <a href="reports.php">Generate reports</a>
-        <a href="loanapproval.php">Approval Loans</a>
-        <a href="dispatch.php">Dispatch Goods</a>
-        <a href="logoutadmin.php">Logout</a>
+        
     </div> 
     <!-- Create a table to display the results -->
     <table border="1">
@@ -90,6 +99,8 @@ if ($result) {
             ?>
         </tbody>
     </table>
+           
+
     <?php
 } else {
     // If the query was not successful, display an error message

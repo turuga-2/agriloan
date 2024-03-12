@@ -46,10 +46,7 @@ session_start();?>
             margin-left: 750px;
             padding: 40px;
         }
-        #loanform{
-            margin-left: 500px;
-            padding: 20px;
-        }
+        
         #detailsContainer {
             
             background-color: pink;
@@ -142,7 +139,7 @@ session_start();?>
                             throw new Exception("Error executing the query: " . mysqli_error($conn));
                         }
 
-                        if (mysqli_num_rows($result) > 0) {
+                        if (mysqli_num_rows($result) > 0) { 
 
                             while ($row = mysqli_fetch_assoc($result)) {
                                 echo "<tr id='row_" . $row['loanid'] . "'>";

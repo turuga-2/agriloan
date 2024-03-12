@@ -8,31 +8,33 @@ try {
         $loanid = $_POST['loanid'];
         $_SESSION['loanid'] = $loanid;
 
-        // Use prepared statements to prevent SQL injection
-        $sql = "UPDATE `loans` SET `loanstatus`='Active', `approvaldate` = CURRENT_TIMESTAMP WHERE loanid = ?";
-        $stmt = $conn->prepare($sql);
+        // Fetch grandtotal from the loans table
+        $grandtotalQuery = "SELECT grandtotal FROM loans WHERE loanid = '$loanid'";
+        $grandtotalResult = mysqli_query($conn, $grandtotalQuery);
 
+        if ($grandtotalResult) {
+            $row = mysqli_fetch_assoc($grandtotalResult);
+            $grandtotal = $row['grandtotal'];
 
-        if (!$stmt) {
-            throw new Exception("Error in preparing the statement: " . $conn->error);
+            // Update the loans table
+            $updateLoanQuery = "UPDATE loans SET loanstatus='Active', approvaldate = CURRENT_TIMESTAMP, balance = $grandtotal WHERE loanid = $loanid";
+
+            if (mysqli_query($conn, $updateLoanQuery)) {
+                // Send a JSON response with grandtotal
+                $response = array('status' => 'success', 'message' => 'Loan status updated successfully', 'grandtotal' => $grandtotal);
+                echo json_encode($response);
+            } else {
+                throw new Exception("Error updating loan status: " . mysqli_error($conn));
+            }
+        } else {
+            throw new Exception("Error fetching grandtotal: " . mysqli_error($conn));
         }
-
-        $stmt->bind_param("s", $loanid);
-
-        if (!$stmt->execute()) {
-            throw new Exception("Error executing the statement: " . $stmt->error);
-        }
-
-        // Close the statement
-        $stmt->close();
-
-        // Send a JSON response
-        $response = array('status' => 'success', 'message' => 'Loan status updated successfully');
-        echo json_encode($response);
+    } else {
+        throw new Exception("Invalid request method");
     }
 } catch (Exception $e) {
     // Send an error JSON response
-    $errorResponse = array('status' => 'error', 'message' => 'Error: ' . $e->getMessage());
+    $errorResponse = array('status' => 'error', 'message' => 'Caught Exception: ' . $e->getMessage());
     echo json_encode($errorResponse);
 } finally {
     // Close the database connection
