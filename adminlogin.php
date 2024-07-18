@@ -4,11 +4,19 @@ session_start();?>
 <html>
 <head>
     <title> Admin Login </title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 <style>
 body {
-    background-color: #22503a;
+    /* background-color: #22503a; */
     font-family: Arial, sans-serif;
 }
+header {
+            background-color: #051922;
+            padding: 10px;
+            text-align: center;
+            color: #fff;
+        }
+
 
 body h1 {
     font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
@@ -20,24 +28,30 @@ body p {
     align-self: center;
     justify-content: center;
 }
-.date-time {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 17px;
-  
-}
 
+.login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            background-image: url('HighTechIT-1.0.0/img/indexpage.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            filter: brightness(0.7); /* Adjust the brightness value as needed */
+        }
+        .login-box {
+            width: 400px;
+            height: 400px;
+            background-color: #fff;
+            margin: 100px auto;
+            padding: 20px;
+            border: 1px solid #8CC084; /* Light green border color */
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Add box shadow */
+        }
 
-.login-box {
-    width: 400px;
-    height: 400px;
-    background-color: #27704d;
-    margin: 100px auto;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-}
 
 .login-box h2 {
     text-align: center;
@@ -80,37 +94,36 @@ body p {
     background: #555;
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+
 </head>
 <body>
+    <header>
+            <h1>Agriloan</h1>
+        </header>
 
-</div>
-    <center>
-        <h1> Agriloan </h1>
-        <p><b><i> Welcome to Agriloan where we make farmers' dreams come true!
-        <br>Join us today to get the support you need for a wonderful harvest!
-    </i></b></p>
-    </center>
     
-<div class="login-box">
-    <h2>Admin Login</h2>
-    
-    <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"])?>"method="post">
-        
-        <div class="form-group">
-            <input type="text" id="idNumber" name="idNumber" placeholder="IDNumber" oninput="restrictInputToNumbers(this);">
-
-        </div>
-        <div class="form-group">
+    <div class="login-container">    
+        <div class="login-box">
+            <h2>Admin Login</h2>
             
-            <input type="password" id="password" name="password" placeholder="Password">
-        </div>
-        <div class="form-group">
-            <input type="submit"  value="Submit" name="submit" class="btn">
-        </div>
-    </form>
-    
-</div>
+            <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"])?>"method="post">
+                
+                <div class="form-group">
+                    <input type="text" id="idNumber" name="idNumber" placeholder="IDNumber" oninput="restrictInputToNumbers(this);">
 
+                </div>
+                <div class="form-group">
+                    
+                    <input type="password" id="password" name="password" placeholder="Password">
+                </div>
+                <div class="form-group">
+                    <input type="submit"  value="Submit" name="submit" class="btn">
+                </div>
+            </form>
+            
+        </div>
+    </div>
 
 <?php
 // Process login form data
@@ -131,8 +144,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Both ID number and password are correct
             $row = mysqli_fetch_assoc($checkPasswordResult);
             $_SESSION['idNumberadmin'] = $row['idNumber'];
-            
-            header("Location: adminhome.php");
+            echo "<script>
+            Swal.fire({
+                icon: 'success',
+                title: 'Login Successful!',
+                showConfirmButton: false,
+                timer: 1500
+            }).then(() => {
+                window.location.href = 'dashmin-1.0.0/home.php'; // Redirect to home.php after the alert
+            });
+          </script>";
             exit();
         } else {
             // ID number is correct, but the password is wrong

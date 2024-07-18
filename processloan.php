@@ -46,7 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['loantotal'])) {
     
             // If the idNumber exists, update the credit history to 1
             if ($checkIdStmt->num_rows > 0) {
-                $updateCreditStmt = $conn->prepare("UPDATE loans SET Credithistory = 1 WHERE F_idNumber = ?");
+                $updateCreditStmt = $conn->prepare("UPDATE loans SET credithistory = 1 WHERE F_idNumber = ? AND balance = 0");
                 $updateCreditStmt->bind_param("s", $idNumber);
     
                 if ($updateCreditStmt->execute()) {
@@ -75,7 +75,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['loantotal'])) {
         foreach ($cartItems as $cartItem) {
             $productId = $cartItem['id'];
             $quantity = 1; // Assuming quantity is always 1, you can modify as needed
-            $price = $cartItem['price'];
+            $price = $cartItem['price']; 
 
             // Bind parameters to the prepared statement
             $insertLoandetailsStmt->bind_param("iiid", $loanid, $productId, $quantity, $price);

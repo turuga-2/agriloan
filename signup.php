@@ -127,26 +127,40 @@ $conn->close();
     <title>Sign Up</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #0e301d6c;
-        }
+        font-family: Arial, sans-serif;
+        background-color: #0e301d6c;
+        margin: 0; /* Remove default margin to ensure full-width background */
+    }
 
         .container {
-            max-width: 400px;
+            max-width: 70%; /* Adjust the maximum width as needed */
             margin: 50px auto;
             padding: 20px;
             background-color: white;
             border-radius: 5px;
             box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.2);
         }
+        /* Add media queries for responsiveness */
+    @media only screen and (max-width: 600px) {
+        .container {
+            max-width: 90%; /* Adjust the maximum width for smaller screens */
+        }
+    }
 
         h1 {
             text-align: center;
             margin-bottom: 20px;
             color: #4caf50;
         }
+        h4 {
+            text-align: left;
+            margin-bottom: 20px;
+            color: #4caf50;
+        }
 
         form {
+            margin-left: 30px;
+            max-width: 90%;
             display: flex;
             flex-direction: column;
         }
@@ -225,7 +239,7 @@ $conn->close();
 <body>
     <div class="container">
         <h1>Sign up process</h1>
-        <p>Please enter your details to Sign-up</p>
+        <h4>Please enter your details to Sign-up</h4>
 
         <form action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"])?>" method="post" autocomplete="on" id="accountForm">
 

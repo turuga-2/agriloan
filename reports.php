@@ -171,41 +171,11 @@ if (!isset($_SESSION['idNumberadmin'])) {
     printWindow.close();
     toggleModal()
 
-    //location.reload(true); // Pass true to force a reload from the server, bypassing the cache
-
 }
 
     function closeModal() {
         $('#myModal').modal('hide');
     }
-
-
-
-    // function printCard(cardId, modalId) {
-    //         // Get the HTML content of the specified card
-    // var printContent = document.getElementById(modalId).innerHTML;
-
-    //     // Store the original body content
-    //     var originalContent = document.body.innerHTML;
-
-    //     // Replace the entire body content with the card content
-    //     document.body.innerHTML = printContent;
-
-    //     // Trigger the browser's print dialog
-    //     window.print();
-
-    //     // Restore the original body content after printing
-    //     document.body.innerHTML = originalContent;
-
-    //     // Debugging: Log a message to check if the closeModal function is being called
-    //     //console.log("Before closing modal");
-
-    //     // Close the modal after printing (assuming you have a function named closeModal)
-    //     toggleModal();
-
-    //     // Debugging: Log a message after attempting to close the modal
-    //     console.log("After closing modal");
-    //             }
         </script>
 
 <body>
